@@ -1,0 +1,31 @@
+# Golang CircleCI 2.0 configuration file
+
+version: 2
+
+jobs:
+  build:
+
+    docker:
+      - image: circleci/golang:1.10.3
+    working_directory: /go/src/github.com/DSiSc/validator
+
+    steps:
+      - checkout
+
+      - run:
+          name: Get dependencies
+          command: make fetch-deps
+
+      - run:
+          name: Static checks
+          command: make static-check
+
+      - run:
+          name: Correctness check
+          command: make build && make vet
+
+      - run:
+          name: Test with coverage
+          command: |
+            make coverage
+            bash <(curl -s https://codecov.io/bash)
