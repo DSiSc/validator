@@ -3,16 +3,17 @@ package validator
 import (
 	"fmt"
 	"github.com/DSiSc/blockchain"
-	"github.com/DSiSc/craft/signature"
 	"github.com/DSiSc/craft/types"
+	"github.com/DSiSc/validator/tools/account"
+	"github.com/DSiSc/validator/tools/signature"
 	"github.com/DSiSc/validator/worker"
 )
 
 type Validator struct {
-	Account *types.Account
+	Account *account.Account
 }
 
-func NewValidator(account *types.Account) *Validator {
+func NewValidator(account *account.Account) *Validator {
 	return &Validator{
 		Account: account,
 	}
@@ -24,8 +25,8 @@ func (self *Validator) ValidateBlock(block *types.Block) (*types.Header, error) 
 		return nil, fmt.Errorf("New Latest State BlockChain Error:%s.", err)
 	}
 	// new worker to verify the block
-	worker := worker.NewWorker(chain, block)
-	err = worker.VerifyBlock()
+	work := worker.NewWorker(chain, block)
+	err = work.VerifyBlock()
 	if nil != err {
 		return nil, err
 	}
