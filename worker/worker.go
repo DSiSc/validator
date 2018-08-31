@@ -3,9 +3,9 @@ package worker
 import (
 	"fmt"
 	"github.com/DSiSc/blockchain"
-	"github.com/DSiSc/craft/crypto"
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/evm-NG"
+	"github.com/DSiSc/evm-NG/common/crypto"
 	"github.com/DSiSc/validator/tools"
 )
 
@@ -18,14 +18,12 @@ type Worker struct {
 
 func NewWorker(chain *blockchain.BlockChain, block *types.Block) *Worker {
 	return &Worker{
-		block:    block,
-		chain:    chain,
-		receipts: nil,
-		logs:     nil,
+		block: block,
+		chain: chain,
 	}
 }
 
-func getTxRoot(txs []*types.Transaction) types.Hash {
+func GetTxsRoot(txs []*types.Transaction) types.Hash {
 	txHash := make([]types.Hash, 0, len(txs))
 	for _, t := range txs {
 		txHash = append(txHash, t.Hash())
@@ -42,18 +40,20 @@ func (self *Worker) VerifyBlock() error {
 		return fmt.Errorf("Wrong Block.Header.ChainID. Expected %v, got %v",
 			currentBlock.Header.ChainID, self.block.Header.ChainID)
 	}
+
 	// 2. hash
 	if self.block.Header.PrevBlockHash != currentBlock.Hash() {
 		return fmt.Errorf("Wrong Block.Header.PrevBlockHash. Expected %v, got %v",
 			currentBlock.Hash(), self.block.Header.PrevBlockHash)
 	}
+
 	// 3. height
 	if self.block.Header.Height != self.chain.GetCurrentBlockHeight()+1 {
 		return fmt.Errorf("Wrong Block.Header.Height. Expected %v, got %v",
 			self.chain.GetCurrentBlockHeight()+1, self.block.Header.Height)
 	}
 	// 4. txhash
-	txsHash := types.GetTxsRoot(self.block.Transactions)
+	txsHash := GetTxsRoot(self.block.Transactions)
 	if self.block.Header.TxRoot != txsHash {
 		return fmt.Errorf("Wrong Block.Header.TxRoot. Expected %v, got %v",
 			txsHash, self.block.Header.TxRoot)
@@ -66,6 +66,7 @@ func (self *Worker) VerifyBlock() error {
 		allLogs  []*types.Log
 		gp       = new(types.GasPool).AddGas(uint64(65536))
 	)
+
 	var from types.Address
 	var sign types.Signer
 	// 5. verify every transactions in the block by evm
