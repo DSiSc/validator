@@ -6,8 +6,9 @@ import (
 )
 
 func Test_NewWorker(t *testing.T) {
+	assert := assert.New(t)
 	var worker = NewWorker(nil, nil)
-	assert.NotNil(t, worker)
-	assert.Nil(t, worker.block)
-	assert.Nil(t, worker.chain)
+	assert.NotNil(worker)
+	assert.Nil(worker.block)
+	assert.Nil(worker.chain)
 }

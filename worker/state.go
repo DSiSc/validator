@@ -5,11 +5,12 @@ import (
 	"github.com/DSiSc/craft/types"
 	evmNg "github.com/DSiSc/evm-NG"
 	"github.com/DSiSc/txpool/log"
+	"github.com/DSiSc/validator/worker/common"
 	"math/big"
 )
 
 type StateTransition struct {
-	gp         *types.GasPool
+	gp         *common.GasPool
 	msg        Message
 	gas        uint64
 	gasPrice   *big.Int
@@ -36,7 +37,7 @@ type Message interface {
 }
 
 // NewStateTransition initialises and returns a new state transition object.
-func NewStateTransition(evm *evmNg.EVM, msg Message, gp *types.GasPool) *StateTransition {
+func NewStateTransition(evm *evmNg.EVM, msg Message, gp *common.GasPool) *StateTransition {
 	return &StateTransition{
 		gp:       gp,
 		evm:      evm,
@@ -54,7 +55,7 @@ func NewStateTransition(evm *evmNg.EVM, msg Message, gp *types.GasPool) *StateTr
 // the gas used (which includes gas refunds) and an error if it failed. An error always
 // indicates a core error meaning that the message would always fail for that particular
 // state and would never be accepted within a block.
-func ApplyMessage(evm *evmNg.EVM, msg Message, gp *types.GasPool) ([]byte, uint64, bool, error) {
+func ApplyMessage(evm *evmNg.EVM, msg Message, gp *common.GasPool) ([]byte, uint64, bool, error) {
 	return NewStateTransition(evm, msg, gp).TransitionDb()
 }
 

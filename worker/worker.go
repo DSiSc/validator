@@ -7,6 +7,7 @@ import (
 	"github.com/DSiSc/evm-NG"
 	"github.com/DSiSc/evm-NG/common/crypto"
 	"github.com/DSiSc/validator/tools"
+	"github.com/DSiSc/validator/worker/common"
 )
 
 type Worker struct {
@@ -64,7 +65,7 @@ func (self *Worker) VerifyBlock() error {
 		usedGas  = new(uint64)
 		header   = self.block.Header
 		allLogs  []*types.Log
-		gp       = new(types.GasPool).AddGas(uint64(65536))
+		gp       = new(common.GasPool).AddGas(uint64(65536))
 	)
 
 	var from types.Address
@@ -88,7 +89,7 @@ func (self *Worker) VerifyBlock() error {
 
 func (self *Worker) VerifyTransaction(
 	author types.Address,
-	gp *types.GasPool,
+	gp *common.GasPool,
 	header *types.Header,
 	tx *types.Transaction,
 	usedGas *uint64) (*types.Receipt, uint64, error) {
