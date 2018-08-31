@@ -13,8 +13,8 @@ import (
 type Worker struct {
 	block    *types.Block
 	chain    *blockchain.BlockChain
-	receipts types.Receipts
-	logs     []*types.Log
+	receipts common.Receipts
+	logs     []*common.Log
 }
 
 func NewWorker(chain *blockchain.BlockChain, block *types.Block) *Worker {
@@ -61,10 +61,10 @@ func (self *Worker) VerifyBlock() error {
 	}
 
 	var (
-		receipts types.Receipts
+		receipts common.Receipts
 		usedGas  = new(uint64)
 		header   = self.block.Header
-		allLogs  []*types.Log
+		allLogs  []*common.Log
 		gp       = new(common.GasPool).AddGas(uint64(65536))
 	)
 
@@ -92,7 +92,7 @@ func (self *Worker) VerifyTransaction(
 	gp *common.GasPool,
 	header *types.Header,
 	tx *types.Transaction,
-	usedGas *uint64) (*types.Receipt, uint64, error) {
+	usedGas *uint64) (*common.Receipt, uint64, error) {
 
 	var signer types.Signer
 	msg, err := tx.AsMessage(signer)
@@ -112,7 +112,7 @@ func (self *Worker) VerifyTransaction(
 
 	// Create a new receipt for the transaction, storing the intermediate root and gas used by the tx
 	// based on the eip phase, we're passing wether the root touch-delete accounts.
-	receipt := types.NewReceipt(root, failed, *usedGas)
+	receipt := common.NewReceipt(root, failed, *usedGas)
 	receipt.TxHash = tx.Hash()
 	receipt.GasUsed = gas
 	// if the transaction created a contract, store the creation address in the receipt.
