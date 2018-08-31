@@ -6,7 +6,7 @@ import (
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/evm-NG"
 	"github.com/DSiSc/evm-NG/common/crypto"
-	"github.com/DSiSc/validator/tools"
+	"github.com/DSiSc/validator/tools/merkle_tree"
 	"github.com/DSiSc/validator/worker/common"
 )
 
@@ -29,7 +29,7 @@ func GetTxsRoot(txs []*types.Transaction) types.Hash {
 	for _, t := range txs {
 		txHash = append(txHash, t.Hash())
 	}
-	txRoot := tools.ComputeMerkleRoot(txHash)
+	txRoot := merkle_tree.ComputeMerkleRoot(txHash)
 	return txRoot
 }
 
