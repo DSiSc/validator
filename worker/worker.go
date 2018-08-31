@@ -5,7 +5,8 @@ import (
 	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/crypto"
 	"github.com/DSiSc/craft/types"
-	evm "github.com/DSiSc/evm-NG"
+	"github.com/DSiSc/evm-NG"
+	"github.com/DSiSc/validator/tools"
 )
 
 type Worker struct {
@@ -29,7 +30,7 @@ func getTxRoot(txs []*types.Transaction) types.Hash {
 	for _, t := range txs {
 		txHash = append(txHash, t.Hash())
 	}
-	txRoot := types.ComputeMerkleRoot(txHash)
+	txRoot := tools.ComputeMerkleRoot(txHash)
 	return txRoot
 }
 
