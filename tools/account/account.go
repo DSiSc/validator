@@ -17,7 +17,6 @@ func (*Account) PrivKey() keypair.PrivateKey {
 }
 
 //get signer's public key
-
 func (*Account) PubKey() keypair.PublicKey {
 	return nil
 }

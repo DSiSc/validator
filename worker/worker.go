@@ -6,8 +6,11 @@ import (
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/evm-NG"
 	"github.com/DSiSc/evm-NG/common/crypto"
+	vcommon "github.com/DSiSc/validator/common"
 	"github.com/DSiSc/validator/tools/merkle_tree"
+	"github.com/DSiSc/validator/tools/signature"
 	"github.com/DSiSc/validator/worker/common"
+	//"github.com/basechain/core"
 )
 
 type Worker struct {
@@ -27,7 +30,7 @@ func NewWorker(chain *blockchain.BlockChain, block *types.Block) *Worker {
 func GetTxsRoot(txs []*types.Transaction) types.Hash {
 	txHash := make([]types.Hash, 0, len(txs))
 	for _, t := range txs {
-		txHash = append(txHash, t.Hash())
+		txHash = append(txHash, vcommon.TxHash(t))
 	}
 	txRoot := merkle_tree.ComputeMerkleRoot(txHash)
 	return txRoot
@@ -43,9 +46,9 @@ func (self *Worker) VerifyBlock() error {
 	}
 
 	// 2. hash
-	if self.block.Header.PrevBlockHash != currentBlock.Hash() {
+	if self.block.Header.PrevBlockHash != vcommon.BlockHash(currentBlock) {
 		return fmt.Errorf("Wrong Block.Header.PrevBlockHash. Expected %v, got %v",
-			currentBlock.Hash(), self.block.Header.PrevBlockHash)
+			vcommon.BlockHash(currentBlock), self.block.Header.PrevBlockHash)
 	}
 
 	// 3. height
@@ -69,11 +72,11 @@ func (self *Worker) VerifyBlock() error {
 	)
 
 	var from types.Address
-	var sign types.Signer
+	var sign signature.TxSigner
 	// 5. verify every transactions in the block by evm
 	for i, tx := range self.block.Transactions {
-		self.chain.Prepare(tx.Hash(), self.block.Hash(), i)
-		from, _ = types.Sender(sign, tx)
+		self.chain.Prepare(vcommon.TxHash(tx), vcommon.BlockHash(self.block), i)
+		from, _ = signature.Sender(sign, tx)
 		receipt, _, err := self.VerifyTransaction(from, gp, header, tx, usedGas)
 		if err != nil {
 			return err
@@ -94,29 +97,23 @@ func (self *Worker) VerifyTransaction(
 	tx *types.Transaction,
 	usedGas *uint64) (*common.Receipt, uint64, error) {
 
-	var signer types.Signer
-	msg, err := tx.AsMessage(signer)
-	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to make message.")
-	}
-
-	context := evm.NewEVMContext(msg, header, self.chain, author)
+	context := evm.NewEVMContext(*tx, header, self.chain, author)
 	evmEnv := evm.NewEVM(context, self.chain)
-	_, gas, failed, err := ApplyMessage(evmEnv, msg, gp)
+	_, gas, failed, err := ApplyTransaction(evmEnv, tx, gp)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	root := self.chain.IntermediateRoot(false).Bytes()
+	root := self.chain.IntermediateRoot(false)
 	*usedGas += gas
 
 	// Create a new receipt for the transaction, storing the intermediate root and gas used by the tx
 	// based on the eip phase, we're passing wether the root touch-delete accounts.
-	receipt := common.NewReceipt(root, failed, *usedGas)
-	receipt.TxHash = tx.Hash()
+	receipt := common.NewReceipt(vcommon.HashToByte(root), failed, *usedGas)
+	receipt.TxHash = vcommon.TxHash(tx)
 	receipt.GasUsed = gas
 	// if the transaction created a contract, store the creation address in the receipt.
-	if msg.To() == nil {
+	if tx.Data.Recipient == nil {
 		receipt.ContractAddress = crypto.CreateAddress(evmEnv.Context.Origin, uint64(0))
 	}
 	// Set the receipt logs and create a bloom for filtering

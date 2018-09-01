@@ -31,6 +31,13 @@ func Hex2Bytes(str string) []byte {
 
 func BytesToAddress(b []byte) types.Address {
 	var a types.Address
-	a.SetBytes(b)
+	SetBytes(b, &a)
 	return a
+}
+
+func SetBytes(b []byte, a *types.Address) {
+	if len(b) > len(a) {
+		b = b[len(b)-types.AddressLength:]
+	}
+	copy(a[types.AddressLength-len(b):], b)
 }

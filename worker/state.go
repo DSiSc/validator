@@ -5,13 +5,14 @@ import (
 	"github.com/DSiSc/craft/types"
 	evmNg "github.com/DSiSc/evm-NG"
 	"github.com/DSiSc/txpool/log"
+	vcommon "github.com/DSiSc/validator/common"
 	"github.com/DSiSc/validator/worker/common"
 	"math/big"
 )
 
 type StateTransition struct {
 	gp         *common.GasPool
-	msg        Message
+	tx         *types.Transaction
 	gas        uint64
 	gasPrice   *big.Int
 	initialGas uint64
@@ -19,32 +20,27 @@ type StateTransition struct {
 	data       []byte
 	state      *blockchain.BlockChain
 	evm        *evmNg.EVM
-}
-
-// Message represents a message sent to a contract.
-type Message interface {
-	From() types.Address
-	//FromFrontier() (common.Address, error)
-	To() *types.Address
-
-	GasPrice() *big.Int
-	Gas() uint64
-	Value() *big.Int
-
-	Nonce() uint64
-	CheckNonce() bool
-	Data() []byte
+	from       types.Address
+	to         types.Address
 }
 
 // NewStateTransition initialises and returns a new state transition object.
-func NewStateTransition(evm *evmNg.EVM, msg Message, gp *common.GasPool) *StateTransition {
+func NewStateTransition(evm *evmNg.EVM, trx *types.Transaction, gp *common.GasPool) *StateTransition {
+	var receive types.Address
+	if trx.Data.Recipient == nil /* contract creation */ {
+		receive = types.Address{}
+	} else {
+		receive = *trx.Data.Recipient
+	}
 	return &StateTransition{
 		gp:       gp,
 		evm:      evm,
-		msg:      msg,
-		gasPrice: msg.GasPrice(),
-		value:    msg.Value(),
-		data:     msg.Data(),
+		tx:       trx,
+		from:     *trx.Data.From,
+		to:       receive,
+		gasPrice: trx.Data.Price,
+		value:    trx.Data.Amount,
+		data:     trx.Data.Payload,
 		state:    evm.StateDB,
 	}
 }
@@ -55,16 +51,8 @@ func NewStateTransition(evm *evmNg.EVM, msg Message, gp *common.GasPool) *StateT
 // the gas used (which includes gas refunds) and an error if it failed. An error always
 // indicates a core error meaning that the message would always fail for that particular
 // state and would never be accepted within a block.
-func ApplyMessage(evm *evmNg.EVM, msg Message, gp *common.GasPool) ([]byte, uint64, bool, error) {
-	return NewStateTransition(evm, msg, gp).TransitionDb()
-}
-
-// to returns the recipient of the message.
-func (st *StateTransition) to() types.Address {
-	if st.msg == nil || st.msg.To() == nil /* contract creation */ {
-		return types.Address{}
-	}
-	return *st.msg.To()
+func ApplyTransaction(evm *evmNg.EVM, tx *types.Transaction, gp *common.GasPool) ([]byte, uint64, bool, error) {
+	return NewStateTransition(evm, tx, gp).TransitionDb()
 }
 
 // TransitionDb will transition the state by applying the current message and
@@ -74,10 +62,10 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 	/*if err = st.preCheck(); err != nil {
 		return
 	}*/
-	msg := st.msg
-	sender := evmNg.AccountRef(msg.From())
+	from := *st.tx.Data.From
+	sender := vcommon.NewRefAddress(from)
 	//homestead := st.evm.ChainConfig().IsHomestead(st.evm.BlockNumber)
-	contractCreation := msg.To() == nil
+	contractCreation := st.tx.Data.Recipient == nil
 	/*
 		// Pay intrinsic gas
 		gas, err := IntrinsicGas(st.data, contractCreation, homestead)
@@ -96,8 +84,8 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		ret, _, st.gas, vmerr = evm.Create(sender, st.data, st.gas, st.value)
 	} else {
 		// Increment the nonce for the next transaction
-		st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
-		ret, st.gas, vmerr = evm.Call(sender, st.to(), st.data, st.gas, st.value)
+		st.state.SetNonce(from, st.state.GetNonce(from)+1)
+		ret, st.gas, vmerr = evm.Call(sender, st.to, st.data, st.gas, st.value)
 	}
 	if vmerr != nil {
 		log.Error("VM returned with error")
@@ -124,7 +112,7 @@ func (st *StateTransition) refundGas() {
 
 	// Return ETH for remaining gas, exchanged at the original rate.
 	remaining := new(big.Int).Mul(new(big.Int).SetUint64(st.gas), st.gasPrice)
-	st.state.AddBalance(st.msg.From(), remaining)
+	st.state.AddBalance(*st.tx.Data.From, remaining)
 
 	// Also return remaining gas to the block gas counter so it is
 	// available for the next transaction.
