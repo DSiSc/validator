@@ -1,6 +1,7 @@
 package account
 
 import (
+	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/validator/tools"
 	"github.com/DSiSc/validator/tools/signature/keypair"
 	"github.com/stretchr/testify/assert"
@@ -9,6 +10,11 @@ import (
 
 func Test_Account(t *testing.T) {
 	assert := assert.New(t)
+
+	var address = types.Address{
+		0x33, 0x3c, 0x33, 0x10, 0x82, 0x4b, 0x7c, 0x68, 0x51, 0x33,
+		0xf2, 0xbe, 0xdb, 0x2c, 0xa4, 0xb8, 0xb4, 0xdf, 0x63, 0x3d,
+	}
 
 	var account = &Account{
 		PrivateKey: nil,
@@ -26,4 +32,13 @@ func Test_Account(t *testing.T) {
 	scheme := account.Scheme()
 	assert.Equal(keypair.SignatureScheme('a'), scheme)
 
+	addr := account.Address
+	assert.Equal(address, addr)
+
+	exceptStr := "3<3\x10\x82K|hQ3\xf2\xbe\xdb,\xa4\xb8\xb4\xdfc="
+	str := string(address[:])
+	assert.Equal(exceptStr, str)
+
+	data := []byte(str)
+	assert.Equal(address, tools.BytesToAddress(data))
 }

@@ -1,9 +1,11 @@
 package validator
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/types"
+	"github.com/DSiSc/txpool/log"
 	"github.com/DSiSc/validator/common"
 	"github.com/DSiSc/validator/tools/account"
 	"github.com/DSiSc/validator/tools/signature"
@@ -33,12 +35,20 @@ func (self *Validator) ValidateBlock(block *types.Block) (*types.Header, error) 
 	}
 	// sign the block
 	hash := common.BlockHash(block)
-	sig, err1 := signature.Sign(self.Account, hash[:])
-	if err1 != nil {
-		return nil, fmt.Errorf("[Signature],Sign error:%s.", err1)
+	sign, ok := signature.Sign(self.Account, hash[:])
+	if ok != nil {
+		return nil, fmt.Errorf("[Signature],Sign error:%s.", ok)
+	}
+	notSigned := true
+	for _, value := range block.Header.SigData {
+		if bytes.Equal(value, sign) {
+			notSigned = false
+			log.Warn("Duplicate sign")
+		}
+	}
+	if notSigned {
+		block.Header.SigData = append(block.Header.SigData, sign)
 	}
 
-	//block.Header.SigData = [][]byte{sig}
-	block.Header.SigData = append(block.Header.SigData, sig)
 	return block.Header, nil
 }
