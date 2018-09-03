@@ -45,9 +45,9 @@ func (self *Worker) VerifyBlock() error {
 	}
 
 	// 2. hash
-	if self.block.Header.PrevBlockHash != vcommon.BlockHash(currentBlock) {
+	if self.block.Header.PrevBlockHash != vcommon.HeaderHash(currentBlock) {
 		return fmt.Errorf("Wrong Block.Header.PrevBlockHash. Expected %v, got %v",
-			vcommon.BlockHash(currentBlock), self.block.Header.PrevBlockHash)
+			vcommon.HeaderHash(currentBlock), self.block.Header.PrevBlockHash)
 	}
 
 	// 3. height
@@ -72,7 +72,7 @@ func (self *Worker) VerifyBlock() error {
 
 	// 5. verify every transactions in the block by evm
 	for i, tx := range self.block.Transactions {
-		self.chain.Prepare(vcommon.TxHash(tx), vcommon.BlockHash(self.block), i)
+		self.chain.Prepare(vcommon.TxHash(tx), vcommon.HeaderHash(self.block), i)
 		receipt, _, err := self.VerifyTransaction(self.block.Header.Coinbase, gp, header, tx, usedGas)
 		if err != nil {
 			return err

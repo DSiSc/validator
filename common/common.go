@@ -20,18 +20,12 @@ func TxHash(tx *types.Transaction) (hash types.Hash) {
 	return
 }
 
-func HeaderHash(h *types.Header) (hash types.Hash) {
-	jsonByte, _ := json.Marshal(h)
+func HeaderHash(block *types.Block) (hash types.Hash) {
+	header := block.Header
+	jsonByte, _ := json.Marshal(header)
 	sumByte := Sum(jsonByte)
 	copy(hash[:], sumByte)
-	h.BlockHash = hash
-	return
-}
-
-func BlockHash(block *types.Block) (hash types.Hash) {
-	jsonByte, _ := json.Marshal(block)
-	sumByte := Sum(jsonByte)
-	copy(hash[:], sumByte)
+	block.HeaderHash = hash
 	return
 }
 
