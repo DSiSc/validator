@@ -8,7 +8,6 @@ import (
 	"github.com/DSiSc/evm-NG/common/crypto"
 	vcommon "github.com/DSiSc/validator/common"
 	"github.com/DSiSc/validator/tools/merkle_tree"
-	"github.com/DSiSc/validator/tools/signature"
 	"github.com/DSiSc/validator/worker/common"
 	//"github.com/basechain/core"
 )
@@ -71,13 +70,10 @@ func (self *Worker) VerifyBlock() error {
 		gp       = new(common.GasPool).AddGas(uint64(65536))
 	)
 
-	var from types.Address
-	var sign signature.TxSigner
 	// 5. verify every transactions in the block by evm
 	for i, tx := range self.block.Transactions {
 		self.chain.Prepare(vcommon.TxHash(tx), vcommon.BlockHash(self.block), i)
-		from, _ = signature.Sender(sign, tx)
-		receipt, _, err := self.VerifyTransaction(from, gp, header, tx, usedGas)
+		receipt, _, err := self.VerifyTransaction(self.block.Header.Coinbase, gp, header, tx, usedGas)
 		if err != nil {
 			return err
 		}
