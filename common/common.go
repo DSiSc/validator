@@ -21,6 +21,10 @@ func TxHash(tx *types.Transaction) (hash types.Hash) {
 }
 
 func HeaderHash(block *types.Block) (hash types.Hash) {
+	if *(new(types.Hash)) != block.HeaderHash {
+		hash = block.HeaderHash
+		return
+	}
 	header := block.Header
 	jsonByte, _ := json.Marshal(header)
 	sumByte := Sum(jsonByte)
@@ -45,4 +49,11 @@ func HashToByte(hash types.Hash) []byte {
 	var value = make([]byte, len(hash))
 	copy(value, hash[:])
 	return value
+}
+
+func BlockHash(block *types.Block) (hash types.Hash) {
+	jsonByte, _ := json.Marshal(block)
+	sumByte := Sum(jsonByte)
+	copy(hash[:], sumByte)
+	return
 }

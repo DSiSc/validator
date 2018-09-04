@@ -43,13 +43,11 @@ func (self *Worker) VerifyBlock() error {
 		return fmt.Errorf("Wrong Block.Header.ChainID. Expected %v, got %v",
 			currentBlock.Header.ChainID, self.block.Header.ChainID)
 	}
-
 	// 2. hash
-	if self.block.Header.PrevBlockHash != vcommon.HeaderHash(currentBlock) {
+	if self.block.Header.PrevBlockHash != vcommon.BlockHash(currentBlock) {
 		return fmt.Errorf("Wrong Block.Header.PrevBlockHash. Expected %v, got %v",
-			vcommon.HeaderHash(currentBlock), self.block.Header.PrevBlockHash)
+			vcommon.BlockHash(currentBlock), self.block.Header.PrevBlockHash)
 	}
-
 	// 3. height
 	if self.block.Header.Height != self.chain.GetCurrentBlockHeight()+1 {
 		return fmt.Errorf("Wrong Block.Header.Height. Expected %v, got %v",
@@ -61,19 +59,22 @@ func (self *Worker) VerifyBlock() error {
 		return fmt.Errorf("Wrong Block.Header.TxRoot. Expected %v, got %v",
 			txsHash, self.block.Header.TxRoot)
 	}
+	//5. header hash
+	hederHash := vcommon.HeaderHash(self.block)
+	if self.block.HeaderHash != hederHash {
+		return fmt.Errorf("Wrong Block.HeaderHash. Expected %v, got %v",
+			hederHash, self.block.HeaderHash)
+	}
 
 	var (
 		receipts common.Receipts
-		usedGas  = new(uint64)
-		header   = self.block.Header
 		allLogs  []*common.Log
 		gp       = new(common.GasPool).AddGas(uint64(65536))
 	)
-
-	// 5. verify every transactions in the block by evm
+	// 6. verify every transactions in the block by evm
 	for i, tx := range self.block.Transactions {
 		self.chain.Prepare(vcommon.TxHash(tx), vcommon.HeaderHash(self.block), i)
-		receipt, _, err := self.VerifyTransaction(self.block.Header.Coinbase, gp, header, tx, usedGas)
+		receipt, _, err := self.VerifyTransaction(self.block.Header.Coinbase, gp, self.block.Header, tx, new(uint64))
 		if err != nil {
 			return err
 		}
@@ -92,7 +93,7 @@ func (self *Worker) VerifyTransaction(
 	header *types.Header,
 	tx *types.Transaction,
 	usedGas *uint64) (*common.Receipt, uint64, error) {
-
+	//TODO: verify tx sign data
 	context := evm.NewEVMContext(*tx, header, self.chain, author)
 	evmEnv := evm.NewEVM(context, self.chain)
 	_, gas, failed, err := ApplyTransaction(evmEnv, tx, gp)
