@@ -1,6 +1,9 @@
 package signature
 
 import (
+	"fmt"
+	"github.com/DSiSc/validator/tools"
+	"github.com/DSiSc/validator/tools/account"
 	"github.com/DSiSc/validator/tools/signature/keypair"
 )
 
@@ -9,17 +12,28 @@ type Signature struct {
 	Value  interface{}
 }
 
+//  Sing the data by singer
 func Sign(signer Signer, data []byte) ([]byte, error) {
-	// TODO: adding key, we use node id to instand
-	var sign = []byte{
-		0x33, 0x3c, 0x33, 0x10, 0x82, 0x4b, 0x7c, 0x68, 0x51, 0x33,
-		0xf2, 0xbe, 0xdb, 0x2c, 0xa4, 0xb8, 0xb4, 0xdf, 0x63, 0x3d,
+	// TODO: adding key
+	signatures := make([]byte, len(data))
+	address := signer.(*account.Account).Address
+	for i := 0; i < len(data); i++ {
+		signatures[i] = address[i] ^ data[i]
 	}
-	return sign, nil
+	return signatures, nil
 }
 
 // Verify check the signature of data using pubKey
-func Verify(pubKey keypair.PublicKey, data, signature []byte) error {
+func Verify(pubKey keypair.PublicKey, signature []byte) error {
+	adminAddres := tools.HexToAddress("333c3310824b7c685133f2bedb2ca4b8b4df633d")
+	pkey := pubKey.([]byte)
+	var decode = make([]byte, len(signature))
+	for i := 0; i < len(signature); i++ {
+		decode[i] = pkey[i] ^ signature[i]
+		if adminAddres[i] != decode[i] {
+			return fmt.Errorf("Signature not consis in pubKey.")
+		}
+	}
 	return nil
 }
 
