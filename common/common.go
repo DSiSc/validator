@@ -57,3 +57,8 @@ func BlockHash(block *types.Block) (hash types.Hash) {
 	copy(hash[:], sumByte)
 	return
 }
+
+func ByteToHash(data []byte) (hash types.Hash) {
+	copy(hash[:], data[:])
+	return
+}

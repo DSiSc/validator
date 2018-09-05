@@ -2,6 +2,7 @@ package signature
 
 import (
 	"fmt"
+	"github.com/DSiSc/validator/common"
 	"github.com/DSiSc/validator/tools"
 	"github.com/DSiSc/validator/tools/account"
 	"github.com/stretchr/testify/assert"
@@ -29,11 +30,11 @@ func Test_Sign(t *testing.T) {
 
 func Test_Verify(t *testing.T) {
 	assert := assert.New(t)
-	signer, err := Verify(MockSignData, Digest[:])
+	signer, err := Verify(common.ByteToHash(MockSignData), Digest[:])
 	assert.Nil(err)
 	assert.Equal(signer, tools.HexToAddress("333c3310824b7c685133f2bedb2ca4b8b4df633d"))
 	NoSignDigest := tools.HexToAddress("b94f5374fce5edbc8e2a8697c15331677e6ebf00")
-	_, err = Verify(MockSignData, NoSignDigest[:])
+	_, err = Verify(common.ByteToHash(MockSignData), NoSignDigest[:])
 	expect := fmt.Errorf("Invalid signData.")
 	assert.Equal(expect, err)
 }

@@ -3,6 +3,7 @@ package signature
 import (
 	"fmt"
 	"github.com/DSiSc/craft/types"
+	"github.com/DSiSc/validator/common"
 	"github.com/DSiSc/validator/tools"
 	"github.com/DSiSc/validator/tools/account"
 	"github.com/DSiSc/validator/tools/signature/keypair"
@@ -18,7 +19,7 @@ func Sign(signer Signer, data []byte) ([]byte, error) {
 	// TODO: adding key
 	signatures := make([]byte, len(data))
 	address := signer.(*account.Account).Address
-	for i := 0; i < len(data); i++ {
+	for i := 0; i < len(address); i++ {
 		signatures[i] = address[i] ^ data[i]
 	}
 	return signatures, nil
@@ -26,7 +27,7 @@ func Sign(signer Signer, data []byte) ([]byte, error) {
 
 func verifySpecifiedAddress(pubKey []byte, signData []byte, validatorAddress types.Address) bool {
 	var decode = make([]byte, len(signData))
-	for i := 0; i < len(signData); i++ {
+	for i := 0; i < len(validatorAddress); i++ {
 		decode[i] = pubKey[i] ^ signData[i]
 		if validatorAddress[i] != decode[i] {
 			return false
@@ -39,7 +40,7 @@ func verifySpecifiedAddress(pubKey []byte, signData []byte, validatorAddress typ
 func Verify(pubKey keypair.PublicKey, signature []byte) (types.Address, error) {
 	adminAddres := tools.HexToAddress("333c3310824b7c685133f2bedb2ca4b8b4df633d")
 	var validators = []types.Address{adminAddres}
-	pkey := pubKey.([]byte)
+	pkey := common.HashToByte(pubKey.(types.Hash))
 	for i := 0; i < len(validators); i++ {
 		if verifySpecifiedAddress(pkey, signature, validators[i]) {
 			return validators[i], nil
