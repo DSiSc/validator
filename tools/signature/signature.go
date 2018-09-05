@@ -2,6 +2,7 @@ package signature
 
 import (
 	"fmt"
+	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/validator/tools"
 	"github.com/DSiSc/validator/tools/account"
 	"github.com/DSiSc/validator/tools/signature/keypair"
@@ -23,18 +24,28 @@ func Sign(signer Signer, data []byte) ([]byte, error) {
 	return signatures, nil
 }
 
-// Verify check the signature of data using pubKey
-func Verify(pubKey keypair.PublicKey, signature []byte) error {
-	adminAddres := tools.HexToAddress("333c3310824b7c685133f2bedb2ca4b8b4df633d")
-	pkey := pubKey.([]byte)
-	var decode = make([]byte, len(signature))
-	for i := 0; i < len(signature); i++ {
-		decode[i] = pkey[i] ^ signature[i]
-		if adminAddres[i] != decode[i] {
-			return fmt.Errorf("Signature not consis in pubKey.")
+func verifySpecifiedAddress(pubKey []byte, signData []byte, validatorAddress types.Address) bool {
+	var decode = make([]byte, len(signData))
+	for i := 0; i < len(signData); i++ {
+		decode[i] = pubKey[i] ^ signData[i]
+		if validatorAddress[i] != decode[i] {
+			return false
 		}
 	}
-	return nil
+	return true
+}
+
+// Verify check the signature of data using pubKey
+func Verify(pubKey keypair.PublicKey, signature []byte) (types.Address, error) {
+	adminAddres := tools.HexToAddress("333c3310824b7c685133f2bedb2ca4b8b4df633d")
+	var validators = []types.Address{adminAddres}
+	pkey := pubKey.([]byte)
+	for i := 0; i < len(validators); i++ {
+		if verifySpecifiedAddress(pkey, signature, validators[i]) {
+			return validators[i], nil
+		}
+	}
+	return *new(types.Address), fmt.Errorf("Invalid signData.")
 }
 
 // VerifyMultiSignature check whether more than m sigs are signed by the keys
