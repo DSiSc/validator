@@ -36,7 +36,6 @@ func GetTxsRoot(txs []*types.Transaction) types.Hash {
 }
 
 func (self *Worker) VerifyBlock() error {
-	// TODO: Verify the block attributyes
 	// 1. chainID
 	currentBlock := self.chain.GetCurrentBlock()
 	if self.block.Header.ChainID != currentBlock.Header.ChainID {

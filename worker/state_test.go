@@ -4,6 +4,10 @@ import (
 	"github.com/DSiSc/craft/types"
 	"math/big"
 	"time"
+	"testing"
+	"github.com/DSiSc/validator/worker/common"
+	"github.com/stretchr/testify/assert"
+	"github.com/DSiSc/evm-NG"
 )
 
 var MockHash = types.Hash{
@@ -30,14 +34,24 @@ var to = &types.Address{
 	0xa2, 0x18, 0xc6, 0xa9, 0x27, 0x4d, 0x30, 0xab, 0x9a, 0x15,
 }
 
-var MockTrx = types.Transaction{
+var MockTrx = &types.Transaction{
 	Data: types.TxData{
 		AccountNonce: 0,
 		Price:        new(big.Int).SetUint64(10),
 		GasLimit:     100,
 		Recipient:    to,
-		From:         nil,
+		From:         to,
 		Amount:       new(big.Int).SetUint64(50),
 		Payload:      to[:10],
 	},
+}
+
+func TestNewStateTransition(t *testing.T) {
+	evmNg := &evm.EVM{
+		StateDB: nil,
+	}
+	var gp = common.GasPool(6)
+	st := NewStateTransition(evmNg, MockTrx, &gp)
+	assert.NotNil(t, st.evm)
+	assert.NotNil(t, st.tx)
 }
