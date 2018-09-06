@@ -5,7 +5,7 @@ import (
 	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/evm-NG"
-	"github.com/DSiSc/evm-NG/common/crypto"
+	"github.com/DSiSc/crypto-suite/crypto"
 	vcommon "github.com/DSiSc/validator/common"
 	"github.com/DSiSc/validator/tools/merkle_tree"
 	"github.com/DSiSc/validator/worker/common"

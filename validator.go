@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/types"
-	"github.com/DSiSc/txpool/log"
+	"github.com/DSiSc/craft/log"
 	"github.com/DSiSc/validator/common"
 	"github.com/DSiSc/validator/tools/account"
 	"github.com/DSiSc/validator/tools/signature"

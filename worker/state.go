@@ -4,7 +4,7 @@ import (
 	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/types"
 	evmNg "github.com/DSiSc/evm-NG"
-	"github.com/DSiSc/txpool/log"
+	"github.com/DSiSc/craft/log"
 	vcommon "github.com/DSiSc/validator/common"
 	"github.com/DSiSc/validator/worker/common"
 	"math/big"
