@@ -2,6 +2,7 @@ package worker
 
 import (
 	"github.com/DSiSc/craft/types"
+	"github.com/DSiSc/validator/tools"
 	wallett "github.com/DSiSc/wallet/core/types"
 	"github.com/stretchr/testify/assert"
 	"math/big"
@@ -29,12 +30,10 @@ var addressA = types.Address{
 	0xa2, 0x18, 0xc6, 0xa9, 0x27, 0x4d, 0x30, 0xab, 0x9a, 0x15,
 }
 
-var addressB = types.Address{
-	0x5f, 0xd5, 0x56, 0xa1, 0x56, 0x50, 0xcd, 0x19, 0xa2, 0xa,
-	0xdd, 0xb1, 0x1c, 0x3f, 0xa4, 0x99, 0x10, 0x9b, 0x98, 0xf9,
-}
+var addressB = tools.HexToAddress("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b")
 
 func TestWorker_VerifyTrsSignature(t *testing.T) {
+	key, _ := wallett.DefaultTestKey()
 	mockTrx := &types.Transaction{
 		Data: types.TxData{
 			AccountNonce: uint64(0),
@@ -45,7 +44,6 @@ func TestWorker_VerifyTrsSignature(t *testing.T) {
 			Payload:      addressB[:10],
 		},
 	}
-	key, _ := wallett.DefaultTestKey()
 	mockTransaction, _ := wallett.SignTx(mockTrx, new(wallett.FrontierSigner), key)
 	worker := NewWorker(nil, nil)
 	ok := worker.VerifyTrsSignature(mockTransaction)

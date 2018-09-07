@@ -12,7 +12,6 @@ import (
 	"github.com/DSiSc/validator/tools/merkle_tree"
 	"github.com/DSiSc/validator/worker/common"
 	wallett "github.com/DSiSc/wallet/core/types"
-	"math/big"
 )
 
 type Worker struct {
@@ -122,14 +121,14 @@ func (self *Worker) VerifyTransaction(author types.Address, gp *common.GasPool, 
 }
 
 func (self *Worker) VerifyTrsSignature(tx *types.Transaction) bool {
-	signer := wallett.NewEIP155Signer(big.NewInt(18))
+	signer := new(wallett.FrontierSigner)
 	from, err := wallett.Sender(signer, tx)
 	if nil != err {
-		log.Error("Get from by tx's signer failed with %v.", err)
+		log.Error("Get from by tx's %x signer failed with %v.", vcommon.TxHash(tx), err)
 		return false
 	}
-	if bytes.Equal((*tx.Data.From)[:], from.Bytes()) {
-		log.Error("Transaction signature verify failed.")
+	if !bytes.Equal((*(tx.Data.From))[:], from.Bytes()) {
+		log.Error("Transaction signature verify failed, tx.Data.From is %x, while signed from is %x.", *tx.Data.From, from)
 		return false
 	}
 	return true
