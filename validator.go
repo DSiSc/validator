@@ -49,6 +49,7 @@ func (self *Validator) ValidateBlock(block *types.Block) (*types.Header, error) 
 	}
 	if notSigned {
 		block.SigData = append(block.SigData, sign)
+		log.Info("Validator add sign %x to block.", sign)
 	}
 
 	return block.Header, nil
