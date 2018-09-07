@@ -1,15 +1,18 @@
 package worker
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/DSiSc/blockchain"
+	"github.com/DSiSc/craft/log"
 	"github.com/DSiSc/craft/types"
-	"github.com/DSiSc/evm-NG"
 	"github.com/DSiSc/crypto-suite/crypto"
+	"github.com/DSiSc/evm-NG"
 	vcommon "github.com/DSiSc/validator/common"
 	"github.com/DSiSc/validator/tools/merkle_tree"
 	"github.com/DSiSc/validator/worker/common"
-	//"github.com/basechain/core"
+	wallett "github.com/DSiSc/wallet/core/types"
+	"math/big"
 )
 
 type Worker struct {
@@ -86,13 +89,12 @@ func (self *Worker) VerifyBlock() error {
 	return nil
 }
 
-func (self *Worker) VerifyTransaction(
-	author types.Address,
-	gp *common.GasPool,
-	header *types.Header,
-	tx *types.Transaction,
-	usedGas *uint64) (*common.Receipt, uint64, error) {
-	//TODO: verify tx sign data
+func (self *Worker) VerifyTransaction(author types.Address, gp *common.GasPool, header *types.Header,
+	tx *types.Transaction, usedGas *uint64) (*common.Receipt, uint64, error) {
+	if self.VerifyTrsSignature(tx) == false {
+		log.Error("Transaction signature verify failed.")
+		return nil, 0, fmt.Errorf("transaction signature failed")
+	}
 	context := evm.NewEVMContext(*tx, header, self.chain, author)
 	evmEnv := evm.NewEVM(context, self.chain)
 	_, gas, failed, err := ApplyTransaction(evmEnv, tx, gp)
@@ -117,4 +119,18 @@ func (self *Worker) VerifyTransaction(
 	// receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
 
 	return receipt, gas, err
+}
+
+func (self *Worker) VerifyTrsSignature(tx *types.Transaction) bool {
+	signer := wallett.NewEIP155Signer(big.NewInt(18))
+	from, err := wallett.Sender(signer, tx)
+	if nil != err {
+		log.Error("Get from by tx's signer failed with %v.", err)
+		return false
+	}
+	if bytes.Equal((*tx.Data.From)[:], from.Bytes()) {
+		log.Error("Transaction signature verify failed.")
+		return false
+	}
+	return true
 }

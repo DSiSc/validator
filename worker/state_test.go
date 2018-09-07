@@ -2,12 +2,12 @@ package worker
 
 import (
 	"github.com/DSiSc/craft/types"
-	"math/big"
-	"time"
-	"testing"
+	"github.com/DSiSc/evm-NG"
 	"github.com/DSiSc/validator/worker/common"
 	"github.com/stretchr/testify/assert"
-	"github.com/DSiSc/evm-NG"
+	"math/big"
+	"testing"
+	"time"
 )
 
 var MockHash = types.Hash{
