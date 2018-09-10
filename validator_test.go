@@ -1,9 +1,14 @@
 package validator
 
 import (
+	"fmt"
+	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/types"
+	"github.com/DSiSc/monkey"
 	account2 "github.com/DSiSc/validator/tools/account"
+	"github.com/DSiSc/validator/worker"
 	"github.com/stretchr/testify/assert"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -38,7 +43,25 @@ func TestNewValidator(t *testing.T) {
 }
 
 func TestValidateBlock(t *testing.T) {
+
+	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+		return nil, fmt.Errorf("mock error")
+	})
 	header, err := validator.ValidateBlock(MockBlock())
 	assert.Nil(t, header)
 	assert.NotNil(t, err)
+	assert.Equal(t, err, fmt.Errorf("get NewLatestStateBlockChain error:mock error "))
+
+	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+		return nil, nil
+	})
+	var woker *worker.Worker
+	monkey.PatchInstanceMethod(reflect.TypeOf(woker), "VerifyBlock", func(*worker.Worker) error {
+		return fmt.Errorf("verify block failed")
+	})
+	header, err = validator.ValidateBlock(MockBlock())
+	assert.Nil(t, header)
+	assert.NotNil(t, err)
+	assert.Equal(t, err, fmt.Errorf("verify block failed"))
+
 }
