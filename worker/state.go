@@ -42,6 +42,7 @@ func NewStateTransition(evm *evmNg.EVM, trx *types.Transaction, gp *common.GasPo
 		value:    trx.Data.Amount,
 		data:     trx.Data.Payload,
 		state:    evm.StateDB,
+		gas:      trx.Data.GasLimit,
 	}
 }
 
