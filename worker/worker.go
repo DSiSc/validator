@@ -83,7 +83,13 @@ func (self *Worker) VerifyBlock() error {
 		receipts = append(receipts, receipt)
 		allLogs = append(allLogs, receipt.Logs...)
 	}
-
+	receiptsHash := make([]types.Hash, 0, len(receipts))
+	for _, t := range receipts {
+		receiptsHash = append(receiptsHash, t.ReceiptHash())
+		log.Info("Record tx's [%v] receipt with hash [%v].", t.TxHash, t.ReceiptHash())
+	}
+	self.block.Header.ReceiptsRoot = merkle_tree.ComputeMerkleRoot(receiptsHash)
+	self.block.HeaderHash = vcommon.HeaderHash(self.block)
 	self.receipts = receipts
 	self.logs = allLogs
 
