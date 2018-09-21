@@ -77,6 +77,7 @@ func (self *Worker) VerifyBlock() error {
 		self.chain.Prepare(vcommon.TxHash(tx), vcommon.HeaderHash(self.block), i)
 		receipt, _, err := self.VerifyTransaction(self.block.Header.Coinbase, gp, self.block.Header, tx, new(uint64))
 		if err != nil {
+			log.Error("Txs %v verify failed with error %v.", vcommon.TxHash(tx), err)
 			return err
 		}
 		receipts = append(receipts, receipt)
@@ -98,6 +99,7 @@ func (self *Worker) VerifyTransaction(author types.Address, gp *common.GasPool, 
 	evmEnv := evm.NewEVM(context, self.chain)
 	_, gas, failed, err := ApplyTransaction(evmEnv, tx, gp)
 	if err != nil {
+		log.Error("Apply transaction %v failed with error %v.", vcommon.TxHash(tx), err)
 		return nil, 0, err
 	}
 
