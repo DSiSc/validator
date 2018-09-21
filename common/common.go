@@ -25,7 +25,7 @@ func HeaderHash(block *types.Block) (hash types.Hash) {
 	jsonByte, _ := json.Marshal(header)
 	sumByte := Sum(jsonByte)
 	copy(hash[:], sumByte)
-	block.HeaderHash = hash
+	//block.HeaderHash = hash
 	return
 }
 

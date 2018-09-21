@@ -1,13 +1,17 @@
 package worker
 
 import (
+	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/types"
+	"github.com/DSiSc/monkey"
+	"github.com/DSiSc/validator/common"
 	"github.com/DSiSc/validator/tools"
 	wallett "github.com/DSiSc/wallet/core/types"
 	"github.com/stretchr/testify/assert"
 	"math/big"
+	"reflect"
 	"testing"
-)
+	)
 
 func TestNewWorker(t *testing.T) {
 	assert := assert.New(t)
@@ -48,4 +52,59 @@ func TestWorker_VerifyTrsSignature(t *testing.T) {
 	worker := NewWorker(nil, nil)
 	ok := worker.VerifyTrsSignature(mockTransaction)
 	assert.Equal(t, true, ok)
+}
+
+func TestWorker_VerifyBlock(t *testing.T) {
+	assert := assert.New(t)
+	var blockChain *blockchain.BlockChain
+	var mockBlock = &types.Block{
+		Header: &types.Header{
+			ChainID: uint64(1),
+		},
+	}
+	worker := NewWorker(nil, mockBlock)
+
+	monkey.PatchInstanceMethod(reflect.TypeOf(blockChain), "GetCurrentBlock", func(*blockchain.BlockChain) *types.Block {
+		return mockBlock
+	})
+	err := worker.VerifyBlock()
+	assert.NotNil(err, "chain id not consistent")
+
+	mockBlock.Header.ChainID = uint64(0)
+	err = worker.VerifyBlock()
+	assert.NotNil(err, "Block pre block hash not consistent")
+
+	monkey.Patch(common.BlockHash, func(*types.Block) types.Hash {
+		return MockHash
+	})
+	worker.block.Header.PrevBlockHash = MockHash
+	worker.block.Header.Height = uint64(0)
+	monkey.PatchInstanceMethod(reflect.TypeOf(blockChain), "GetCurrentBlockHeight", func(*blockchain.BlockChain) uint64 {
+		return 0
+	})
+	err = worker.VerifyBlock()
+	assert.NotNil(err, "Block height not consistent")
+
+	worker.block.Header.Height = uint64(1)
+	worker.block.Header.TxRoot = MockHash
+	err = worker.VerifyBlock()
+	assert.NotNil(err, "Block txroot hash not consistent")
+
+	worker.block.Header.TxRoot = GetTxsRoot(worker.block.Transactions)
+	worker.block.HeaderHash = MockHash
+	err = worker.VerifyBlock()
+	assert.NotNil(err, "Block header hash not consistent")
+
+	monkey.Patch(common.HeaderHash, func(*types.Block) types.Hash {
+		return MockHash
+	})
+	worker.block.Header.ReceiptsRoot = MockHash
+	err = worker.VerifyBlock()
+	assert.NotNil(err, "Receipts hash not consistent")
+
+	var temp types.Hash
+	worker.block.Header.ReceiptsRoot = temp
+	worker.block.HeaderHash = common.HeaderHash(worker.block)
+	err = worker.VerifyBlock()
+	assert.Nil(err)
 }

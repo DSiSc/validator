@@ -88,7 +88,19 @@ func (self *Worker) VerifyBlock() error {
 		receiptsHash = append(receiptsHash, t.ReceiptHash())
 		log.Info("Record tx's [%v] receipt with hash [%v].", t.TxHash, t.ReceiptHash())
 	}
-	self.block.Header.ReceiptsRoot = merkle_tree.ComputeMerkleRoot(receiptsHash)
+	receiptHash := merkle_tree.ComputeMerkleRoot(receiptsHash)
+	var tempHash types.Hash
+	if !bytes.Equal(tempHash[:], self.block.Header.ReceiptsRoot[:]) {
+		log.Warn("Receipts root has assigned with %v.", self.block.Header.ReceiptsRoot)
+		if !bytes.Equal(receiptHash[:], self.block.Header.ReceiptsRoot[:]) {
+			log.Error("Receipts root has assigned with %v, but not consistent with %v.",
+				self.block.Header.ReceiptsRoot, receiptHash)
+			return fmt.Errorf("receipts hash not consistent")
+		}
+	} else {
+		log.Info("Assign receipts hash %v to block %d.", receiptHash, self.block.Header.Height)
+		self.block.Header.ReceiptsRoot = receiptHash
+	}
 	self.block.HeaderHash = vcommon.HeaderHash(self.block)
 	self.receipts = receipts
 	self.logs = allLogs
