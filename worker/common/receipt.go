@@ -1,7 +1,9 @@
 package common
 
 import (
+	"encoding/json"
 	"github.com/DSiSc/craft/types"
+	"github.com/DSiSc/validator/common"
 )
 
 const (
@@ -49,4 +51,12 @@ func NewReceipt(root []byte, failed bool, cumulativeGasUsed uint64) *Receipt {
 		r.Status = ReceiptStatusSuccessful
 	}
 	return r
+}
+
+// compute hash of receipt
+func (receipt *Receipt) ReceiptHash() (hash types.Hash) {
+	jsonByte, _ := json.Marshal(receipt)
+	sumByte := common.Sum(jsonByte)
+	copy(hash[:], sumByte)
+	return
 }

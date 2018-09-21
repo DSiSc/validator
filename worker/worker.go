@@ -61,10 +61,10 @@ func (self *Worker) VerifyBlock() error {
 			txsHash, self.block.Header.TxRoot)
 	}
 	//5. header hash
-	hederHash := vcommon.HeaderHash(self.block)
-	if self.block.HeaderHash != hederHash {
+	headerHash := vcommon.HeaderHash(self.block)
+	if self.block.HeaderHash != headerHash {
 		return fmt.Errorf("Wrong Block.HeaderHash. Expected %v, got %v",
-			hederHash, self.block.HeaderHash)
+			headerHash, self.block.HeaderHash)
 	}
 
 	var (
@@ -83,6 +83,7 @@ func (self *Worker) VerifyBlock() error {
 		receipts = append(receipts, receipt)
 		allLogs = append(allLogs, receipt.Logs...)
 	}
+
 	self.receipts = receipts
 	self.logs = allLogs
 
