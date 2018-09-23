@@ -70,4 +70,10 @@ func TestSender(t *testing.T) {
 	addr, err := Sender(signer, tx)
 	assert.Nil(t, err)
 	assert.Equal(t, addr, from)
+
+	tx.Data.From = &from
+	signer = NewMockSigner(*new(big.Int).SetUint64(1), *new(big.Int).SetUint64(2), *new(big.Int).SetUint64(3), true)
+	addr, err = Sender(signer, tx)
+	assert.Nil(t, err)
+	assert.Equal(t, addr, from)
 }
