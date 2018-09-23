@@ -1,17 +1,19 @@
 package worker
 
 import (
+	"fmt"
 	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/monkey"
 	"github.com/DSiSc/validator/common"
 	"github.com/DSiSc/validator/tools"
+	walletc "github.com/DSiSc/wallet/common"
 	wallett "github.com/DSiSc/wallet/core/types"
 	"github.com/stretchr/testify/assert"
 	"math/big"
 	"reflect"
 	"testing"
-	)
+)
 
 func TestNewWorker(t *testing.T) {
 	assert := assert.New(t)
@@ -34,6 +36,11 @@ var addressA = types.Address{
 	0xa2, 0x18, 0xc6, 0xa9, 0x27, 0x4d, 0x30, 0xab, 0x9a, 0x15,
 }
 
+var addressC = walletc.Address{
+	0xb2, 0x6f, 0x2b, 0x34, 0x2a, 0xab, 0x24, 0xbc, 0xf6, 0x3e,
+	0xa2, 0x18, 0xc6, 0xa9, 0x27, 0x4d, 0x30, 0xab, 0x9a, 0x16,
+}
+
 var addressB = tools.HexToAddress("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b")
 
 func TestWorker_VerifyTrsSignature(t *testing.T) {
@@ -52,6 +59,20 @@ func TestWorker_VerifyTrsSignature(t *testing.T) {
 	worker := NewWorker(nil, nil)
 	ok := worker.VerifyTrsSignature(mockTransaction)
 	assert.Equal(t, true, ok)
+
+	exceptErr := fmt.Errorf("Unknown signer")
+	monkey.Patch(wallett.Sender, func(wallett.Signer, *types.Transaction) (walletc.Address, error) {
+		return addressC, exceptErr
+	})
+	ok = worker.VerifyTrsSignature(mockTransaction)
+	assert.Equal(t, false, ok)
+
+	monkey.Patch(wallett.Sender, func(wallett.Signer, *types.Transaction) (walletc.Address, error) {
+		return addressC, nil
+	})
+	ok = worker.VerifyTrsSignature(mockTransaction)
+	assert.Equal(t, false, ok)
+	monkey.Unpatch(wallett.Sender)
 }
 
 func TestWorker_VerifyBlock(t *testing.T) {
