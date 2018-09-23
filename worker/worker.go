@@ -17,8 +17,8 @@ import (
 type Worker struct {
 	block    *types.Block
 	chain    *blockchain.BlockChain
-	receipts common.Receipts
-	logs     []*common.Log
+	receipts types.Receipts
+	logs     []*types.Log
 }
 
 func NewWorker(chain *blockchain.BlockChain, block *types.Block) *Worker {
@@ -68,8 +68,8 @@ func (self *Worker) VerifyBlock() error {
 	}
 
 	var (
-		receipts common.Receipts
-		allLogs  []*common.Log
+		receipts types.Receipts
+		allLogs  []*types.Log
 		gp       = new(common.GasPool).AddGas(uint64(65536))
 	)
 	// 6. verify every transactions in the block by evm
@@ -85,8 +85,8 @@ func (self *Worker) VerifyBlock() error {
 	}
 	receiptsHash := make([]types.Hash, 0, len(receipts))
 	for _, t := range receipts {
-		receiptsHash = append(receiptsHash, t.ReceiptHash())
-		log.Info("Record tx's [%v] receipt with hash [%v].", t.TxHash, t.ReceiptHash())
+		receiptsHash = append(receiptsHash, common.ReceiptHash(t))
+		log.Info("Record tx's [%v] receipt with hash [%v].", t.TxHash, common.ReceiptHash(t))
 	}
 	receiptHash := merkle_tree.ComputeMerkleRoot(receiptsHash)
 	var tempHash types.Hash
@@ -109,7 +109,7 @@ func (self *Worker) VerifyBlock() error {
 }
 
 func (self *Worker) VerifyTransaction(author types.Address, gp *common.GasPool, header *types.Header,
-	tx *types.Transaction, usedGas *uint64) (*common.Receipt, uint64, error) {
+	tx *types.Transaction, usedGas *uint64) (*types.Receipt, uint64, error) {
 	if self.VerifyTrsSignature(tx) == false {
 		log.Error("Transaction signature verify failed.")
 		return nil, 0, fmt.Errorf("transaction signature failed")
