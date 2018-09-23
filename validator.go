@@ -37,7 +37,7 @@ func (self *Validator) ValidateBlock(block *types.Block) (*types.Header, error) 
 	hash := common.HeaderHash(block)
 	sign, ok := signature.Sign(self.Account, hash[:])
 	if ok != nil {
-		return nil, fmt.Errorf("sign block failed with error %s ", ok)
+		return nil, fmt.Errorf("sign block failed with error: %s", ok)
 	}
 
 	notSigned := true
@@ -45,6 +45,7 @@ func (self *Validator) ValidateBlock(block *types.Block) (*types.Header, error) 
 		if bytes.Equal(value, sign) {
 			notSigned = false
 			log.Warn("Duplicate sign.")
+			break
 		}
 	}
 	if notSigned {

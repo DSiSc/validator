@@ -6,6 +6,7 @@ import (
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/monkey"
 	account2 "github.com/DSiSc/validator/tools/account"
+	"github.com/DSiSc/validator/tools/signature"
 	"github.com/DSiSc/validator/worker"
 	"github.com/stretchr/testify/assert"
 	"reflect"
@@ -43,14 +44,14 @@ func TestNewValidator(t *testing.T) {
 }
 
 func TestValidateBlock(t *testing.T) {
-
+	assert := assert.New(t)
 	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
 		return nil, fmt.Errorf("mock error")
 	})
 	header, err := validator.ValidateBlock(MockBlock())
-	assert.Nil(t, header)
-	assert.NotNil(t, err)
-	assert.Equal(t, err, fmt.Errorf("get NewLatestStateBlockChain error:mock error "))
+	assert.Nil(header)
+	assert.NotNil(err)
+	assert.Equal(err, fmt.Errorf("get NewLatestStateBlockChain error:mock error "))
 
 	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
 		return nil, nil
@@ -60,8 +61,35 @@ func TestValidateBlock(t *testing.T) {
 		return fmt.Errorf("verify block failed")
 	})
 	header, err = validator.ValidateBlock(MockBlock())
-	assert.Nil(t, header)
-	assert.NotNil(t, err)
-	assert.Equal(t, err, fmt.Errorf("verify block failed"))
+	assert.Nil(header)
+	assert.NotNil(err)
+	assert.Equal(err, fmt.Errorf("verify block failed"))
 
+	monkey.PatchInstanceMethod(reflect.TypeOf(woker), "VerifyBlock", func(*worker.Worker) error {
+		return nil
+	})
+
+	monkey.Patch(signature.Sign, func(signature.Signer, []byte) ([]byte, error) {
+		return MockHash[:], fmt.Errorf("sign block failed")
+	})
+	header, err = validator.ValidateBlock(MockBlock())
+	assert.Equal(err, fmt.Errorf("sign block failed with error: sign block failed"))
+	assert.Nil(header)
+
+	monkey.Patch(signature.Sign, func(signature.Signer, []byte) ([]byte, error) {
+		return MockHash[:], nil
+	})
+	mockBlock := MockBlock()
+	var mockSignData [][]byte
+	mockBlock.SigData = mockSignData
+	header, err = validator.ValidateBlock(mockBlock)
+	assert.Nil(err)
+	assert.NotNil(header)
+	assert.Equal(MockHash[:], mockBlock.SigData[0][:])
+
+	mockBlock.SigData = append(mockBlock.SigData, MockHash[:])
+	header, err = validator.ValidateBlock(mockBlock)
+	assert.Nil(err)
+	assert.NotNil(header)
+	assert.Equal(MockHash[:], mockBlock.SigData[0][:])
 }
