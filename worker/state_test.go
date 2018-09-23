@@ -3,9 +3,11 @@ package worker
 import (
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/evm-NG"
+	"github.com/DSiSc/monkey"
 	"github.com/DSiSc/validator/worker/common"
 	"github.com/stretchr/testify/assert"
 	"math/big"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -34,6 +36,11 @@ var to = &types.Address{
 	0xa2, 0x18, 0xc6, 0xa9, 0x27, 0x4d, 0x30, 0xab, 0x9a, 0x15,
 }
 
+var contractAddress = types.Address{
+	0xb2, 0x6f, 0x2b, 0x34, 0x2a, 0xab, 0x24, 0xbc, 0xf6, 0x3e,
+	0xa2, 0x18, 0xc6, 0xa9, 0x27, 0x4d, 0x30, 0xab, 0x9a, 0x16,
+}
+
 var MockTrx = &types.Transaction{
 	Data: types.TxData{
 		AccountNonce: 0,
@@ -46,12 +53,31 @@ var MockTrx = &types.Transaction{
 	},
 }
 
+var state *StateTransition
+
 func TestNewStateTransition(t *testing.T) {
 	evmNg := &evm.EVM{
 		StateDB: nil,
 	}
 	var gp = common.GasPool(6)
-	st := NewStateTransition(evmNg, MockTrx, &gp)
-	assert.NotNil(t, st.evm)
-	assert.NotNil(t, st.tx)
+	state = NewStateTransition(evmNg, MockTrx, &gp)
+	assert.NotNil(t, state.evm)
+	assert.NotNil(t, state.tx)
+}
+
+func TestApplyTransaction(t *testing.T) {
+}
+
+func TestStateTransition_TransitionDb(t *testing.T) {
+	// test carets contract
+	state.tx.Data.Recipient = nil
+	var evmd *evm.EVM
+	monkey.PatchInstanceMethod(reflect.TypeOf(evmd), "Create", func(*evm.EVM, evm.ContractRef, []byte, uint64, *big.Int) ([]byte, types.Address, uint64, error) {
+		return to[:10], contractAddress, 0, evm.ErrInsufficientBalance
+	})
+	ret, used, ok, err := state.TransitionDb()
+	assert.Equal(t, err, evm.ErrInsufficientBalance)
+	assert.Equal(t, ok, false)
+	assert.Equal(t, uint64(0), used)
+	assert.Equal(t, to[:10], ret)
 }
