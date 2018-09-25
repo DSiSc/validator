@@ -75,7 +75,6 @@ func MockBlock() *types.Block {
 func TestBlockHash(t *testing.T) {
 	assert := assert.New(t)
 	block := MockBlock()
-
 	var tmp types.Hash
 	assert.True(bytes.Equal(tmp[:], block.HeaderHash[:]))
 	headerHash := HeaderHash(block)

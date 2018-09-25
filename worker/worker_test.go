@@ -56,6 +56,11 @@ var mockHash = types.Hash{
 	0x8d, 0xfe, 0x5d, 0x6f, 0xa7, 0xdb, 0xd5, 0x50, 0xc9, 0x25, 0xb1, 0xb3, 0x4, 0xdc, 0xc5, 0x1c,
 }
 
+var mockHash1 = types.Hash{
+	0x1e, 0xcf, 0x7, 0xba, 0xfc, 0x42, 0xb0, 0x8d, 0xfd, 0x23, 0x9c, 0x45, 0xa4, 0xb9, 0x38, 0xd,
+	0x8d, 0xfe, 0x5d, 0x6f, 0xa7, 0xdb, 0xd5, 0x50, 0xc9, 0x25, 0xb1, 0xb3, 0x4, 0xdc, 0xc5, 0x1c,
+}
+
 func TestWorker_VerifyTrsSignature(t *testing.T) {
 	key, _ := wallett.DefaultTestKey()
 	mockTrx := &types.Transaction{
@@ -145,6 +150,7 @@ func TestWorker_VerifyBlock(t *testing.T) {
 	})
 	var tmp types.Hash
 	worker.block.Header.TxRoot = tmp
+	worker.block.HeaderHash = mockHash1
 	err = worker.VerifyBlock()
 	assert.NotNil(err, "Block header hash not consistent")
 
@@ -153,11 +159,11 @@ func TestWorker_VerifyBlock(t *testing.T) {
 		return tmp
 	})
 	worker.block.Header.ReceiptsRoot = MockHash
+	worker.block.HeaderHash = common.HeaderHash(worker.block)
 	err = worker.VerifyBlock()
 	assert.NotNil(err, "Receipts hash not consistent")
 
 	worker.block.Header.ReceiptsRoot = tmp
-	worker.block.HeaderHash = common.HeaderHash(worker.block)
 	err = worker.VerifyBlock()
 	assert.Nil(err)
 

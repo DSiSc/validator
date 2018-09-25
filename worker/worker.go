@@ -61,10 +61,13 @@ func (self *Worker) VerifyBlock() error {
 			txsHash, self.block.Header.TxRoot)
 	}
 	//5. header hash
-	headerHash := vcommon.HeaderHash(self.block)
-	if self.block.HeaderHash != headerHash {
-		return fmt.Errorf("Wrong Block.HeaderHash. Expected %v, got %v",
-			headerHash, self.block.HeaderHash)
+	var defaultHash types.Hash
+	if !bytes.Equal(defaultHash[:], self.block.HeaderHash[:]) {
+		headerHash := vcommon.HeaderHash(self.block)
+		if self.block.HeaderHash != headerHash {
+			return fmt.Errorf("Wrong Block.HeaderHash. Expected %v, got %v",
+				headerHash, self.block.HeaderHash)
+		}
 	}
 
 	var (
