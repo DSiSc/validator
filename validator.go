@@ -41,7 +41,7 @@ func (self *Validator) ValidateBlock(block *types.Block) (*types.Header, error) 
 	}
 
 	notSigned := true
-	for _, value := range block.SigData {
+	for _, value := range block.Header.SigData {
 		if bytes.Equal(value, sign) {
 			notSigned = false
 			log.Warn("Duplicate sign.")
@@ -49,7 +49,7 @@ func (self *Validator) ValidateBlock(block *types.Block) (*types.Header, error) 
 		}
 	}
 	if notSigned {
-		block.SigData = append(block.SigData, sign)
+		block.Header.SigData = append(block.Header.SigData, sign)
 		log.Info("Validator add sign %x to block.", sign)
 	}
 

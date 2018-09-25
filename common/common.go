@@ -1,8 +1,10 @@
 package common
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/json"
+	"github.com/DSiSc/craft/log"
 	"github.com/DSiSc/craft/types"
 )
 
@@ -21,11 +23,15 @@ func TxHash(tx *types.Transaction) (hash types.Hash) {
 }
 
 func HeaderHash(block *types.Block) (hash types.Hash) {
-	header := block.Header
-	jsonByte, _ := json.Marshal(header)
+	var defaultHash types.Hash
+	if !bytes.Equal(block.HeaderHash[:], defaultHash[:]) {
+		log.Info("block hash %v has exits.", block.HeaderHash)
+		copy(hash[:], block.HeaderHash[:])
+		return
+	}
+	jsonByte, _ := json.Marshal(block.Header)
 	sumByte := Sum(jsonByte)
 	copy(hash[:], sumByte)
-	//block.HeaderHash = hash
 	return
 }
 
@@ -45,13 +51,6 @@ func HashToByte(hash types.Hash) []byte {
 	var value = make([]byte, len(hash))
 	copy(value, hash[:])
 	return value
-}
-
-func BlockHash(block *types.Block) (hash types.Hash) {
-	jsonByte, _ := json.Marshal(block)
-	sumByte := Sum(jsonByte)
-	copy(hash[:], sumByte)
-	return
 }
 
 func ByteToHash(data []byte) (hash types.Hash) {

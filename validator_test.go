@@ -81,15 +81,15 @@ func TestValidateBlock(t *testing.T) {
 	})
 	mockBlock := MockBlock()
 	var mockSignData [][]byte
-	mockBlock.SigData = mockSignData
+	mockBlock.Header.SigData = mockSignData
 	header, err = validator.ValidateBlock(mockBlock)
 	assert.Nil(err)
 	assert.NotNil(header)
-	assert.Equal(MockHash[:], mockBlock.SigData[0][:])
+	assert.Equal(MockHash[:], mockBlock.Header.SigData[0][:])
 
-	mockBlock.SigData = append(mockBlock.SigData, MockHash[:])
+	mockBlock.Header.SigData = append(mockBlock.Header.SigData, MockHash[:])
 	header, err = validator.ValidateBlock(mockBlock)
 	assert.Nil(err)
 	assert.NotNil(header)
-	assert.Equal(MockHash[:], mockBlock.SigData[0][:])
+	assert.Equal(MockHash[:], mockBlock.Header.SigData[0][:])
 }

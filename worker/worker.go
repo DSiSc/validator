@@ -45,9 +45,9 @@ func (self *Worker) VerifyBlock() error {
 			currentBlock.Header.ChainID, self.block.Header.ChainID)
 	}
 	// 2. hash
-	if self.block.Header.PrevBlockHash != vcommon.BlockHash(currentBlock) {
+	if self.block.Header.PrevBlockHash != currentBlock.HeaderHash {
 		return fmt.Errorf("Wrong Block.Header.PrevBlockHash. Expected %v, got %v",
-			vcommon.BlockHash(currentBlock), self.block.Header.PrevBlockHash)
+			currentBlock.HeaderHash, self.block.Header.PrevBlockHash)
 	}
 	// 3. height
 	if self.block.Header.Height != self.chain.GetCurrentBlockHeight()+1 {

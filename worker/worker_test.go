@@ -51,6 +51,11 @@ var addressNew = types.Address{
 
 var addressB = tools.HexToAddress("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b")
 
+var mockHash = types.Hash{
+	0x1d, 0xcf, 0x7, 0xba, 0xfc, 0x42, 0xb0, 0x8d, 0xfd, 0x23, 0x9c, 0x45, 0xa4, 0xb9, 0x38, 0xd,
+	0x8d, 0xfe, 0x5d, 0x6f, 0xa7, 0xdb, 0xd5, 0x50, 0xc9, 0x25, 0xb1, 0xb3, 0x4, 0xdc, 0xc5, 0x1c,
+}
+
 func TestWorker_VerifyTrsSignature(t *testing.T) {
 	key, _ := wallett.DefaultTestKey()
 	mockTrx := &types.Transaction{
@@ -88,53 +93,74 @@ func TestWorker_VerifyBlock(t *testing.T) {
 	var mockBlock = &types.Block{
 		Header: &types.Header{
 			ChainID: uint64(1),
+			Height:  uint64(1),
 		},
 	}
 	worker := NewWorker(nil, mockBlock)
 
 	monkey.PatchInstanceMethod(reflect.TypeOf(blockChain), "GetCurrentBlock", func(*blockchain.BlockChain) *types.Block {
-		return mockBlock
+		return &types.Block{
+			Header: &types.Header{
+				ChainID: uint64(0),
+			},
+		}
 	})
 	err := worker.VerifyBlock()
 	assert.NotNil(err, "chain id not consistent")
 
-	mockBlock.Header.ChainID = uint64(0)
+	monkey.PatchInstanceMethod(reflect.TypeOf(blockChain), "GetCurrentBlock", func(*blockchain.BlockChain) *types.Block {
+		return &types.Block{
+			Header: &types.Header{
+				ChainID: uint64(1),
+			},
+			HeaderHash: mockHash,
+		}
+	})
 	err = worker.VerifyBlock()
 	assert.NotNil(err, "Block pre block hash not consistent")
 
-	monkey.Patch(common.BlockHash, func(*types.Block) types.Hash {
-		return MockHash
+	monkey.PatchInstanceMethod(reflect.TypeOf(blockChain), "GetCurrentBlock", func(*blockchain.BlockChain) *types.Block {
+		return &types.Block{
+			Header: &types.Header{
+				ChainID: uint64(1),
+			},
+		}
 	})
-	worker.block.Header.PrevBlockHash = MockHash
-	worker.block.Header.Height = uint64(0)
 	monkey.PatchInstanceMethod(reflect.TypeOf(blockChain), "GetCurrentBlockHeight", func(*blockchain.BlockChain) uint64 {
-		return 0
+		return 1
 	})
+	//mockBlock.Header.ChainID = uint64(0)
 	err = worker.VerifyBlock()
 	assert.NotNil(err, "Block height not consistent")
 
-	worker.block.Header.Height = uint64(1)
+	monkey.PatchInstanceMethod(reflect.TypeOf(blockChain), "GetCurrentBlockHeight", func(*blockchain.BlockChain) uint64 {
+		return 0
+	})
 	worker.block.Header.TxRoot = MockHash
 	err = worker.VerifyBlock()
 	assert.NotNil(err, "Block txroot hash not consistent")
 
-	worker.block.Header.TxRoot = GetTxsRoot(worker.block.Transactions)
-	worker.block.HeaderHash = MockHash
+	monkey.Patch(common.HeaderHash, func(*types.Block) types.Hash {
+		return MockHash
+	})
+	var tmp types.Hash
+	worker.block.Header.TxRoot = tmp
 	err = worker.VerifyBlock()
 	assert.NotNil(err, "Block header hash not consistent")
 
 	monkey.Patch(common.HeaderHash, func(*types.Block) types.Hash {
-		return MockHash
+		var tmp types.Hash
+		return tmp
 	})
 	worker.block.Header.ReceiptsRoot = MockHash
 	err = worker.VerifyBlock()
 	assert.NotNil(err, "Receipts hash not consistent")
 
-	var temp types.Hash
-	worker.block.Header.ReceiptsRoot = temp
+	worker.block.Header.ReceiptsRoot = tmp
 	worker.block.HeaderHash = common.HeaderHash(worker.block)
 	err = worker.VerifyBlock()
 	assert.Nil(err)
+
 }
 
 func TestWorker_VerifyTransaction(t *testing.T) {
