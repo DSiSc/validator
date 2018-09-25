@@ -155,3 +155,8 @@ func (self *Worker) VerifyTrsSignature(tx *types.Transaction) bool {
 	}
 	return true
 }
+
+func (self *Worker) GetReceipts() types.Receipts {
+	log.Info("Get Receipts of worker.")
+	return self.receipts
+}

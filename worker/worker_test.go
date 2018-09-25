@@ -196,3 +196,9 @@ func TestWorker_VerifyTransaction(t *testing.T) {
 	assert.Equal(addressNew, receipit.ContractAddress)
 	assert.Equal(uint64(10), gas)
 }
+
+func TestWorker_GetReceipts(t *testing.T) {
+	assert := assert.New(t)
+	worker := NewWorker(nil, nil)
+	assert.Equal(0, len(worker.receipts))
+}
