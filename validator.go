@@ -6,7 +6,6 @@ import (
 	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/log"
 	"github.com/DSiSc/craft/types"
-	"github.com/DSiSc/validator/common"
 	"github.com/DSiSc/validator/tools/account"
 	"github.com/DSiSc/validator/tools/signature"
 	"github.com/DSiSc/validator/worker"
@@ -34,8 +33,7 @@ func (self *Validator) ValidateBlock(block *types.Block) (*types.Header, error) 
 		return nil, err
 	}
 	// sign the block
-	hash := common.HeaderHash(block)
-	sign, ok := signature.Sign(self.Account, hash[:])
+	sign, ok := signature.Sign(self.Account, block.Header.MixDigest[:])
 	if ok != nil {
 		return nil, fmt.Errorf("sign block failed with error: %s", ok)
 	}
