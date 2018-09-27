@@ -65,7 +65,7 @@ func (self *Worker) VerifyBlock() error {
 	if !bytes.Equal(defaultHash[:], self.block.HeaderHash[:]) {
 		headerHash := vcommon.HeaderHash(self.block)
 		if self.block.HeaderHash != headerHash {
-			return fmt.Errorf("Wrong Block.HeaderHash. Expected %v, got %v",
+			return fmt.Errorf("wrong Block.HeaderHash. Expected %v, got %v",
 				headerHash, self.block.HeaderHash)
 		}
 	}
@@ -104,7 +104,7 @@ func (self *Worker) VerifyBlock() error {
 		log.Info("Assign receipts hash %v to block %d.", receiptHash, self.block.Header.Height)
 		self.block.Header.ReceiptsRoot = receiptHash
 	}
-	self.block.HeaderHash = vcommon.HeaderHash(self.block)
+	// self.block.HeaderHash = vcommon.HeaderHash(self.block)
 	self.receipts = receipts
 	self.logs = allLogs
 
