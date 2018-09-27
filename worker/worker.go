@@ -104,7 +104,16 @@ func (self *Worker) VerifyBlock() error {
 		log.Info("Assign receipts hash %v to block %d.", receiptHash, self.block.Header.Height)
 		self.block.Header.ReceiptsRoot = receiptHash
 	}
-	// self.block.HeaderHash = vcommon.HeaderHash(self.block)
+	// 7. verify digest if it exists
+	if !bytes.Equal(defaultHash[:], self.block.Header.MixDigest[:]) {
+		digestHash := vcommon.HeaderDigest(self.block.Header)
+		if !bytes.Equal(digestHash[:], self.block.Header.MixDigest[:]) {
+			log.Error("Block digest not consistent which assignment is [%v], while compute is [%v].",
+				self.block.Header.MixDigest, digestHash)
+			return fmt.Errorf("digest not consistent")
+		}
+	}
+
 	self.receipts = receipts
 	self.logs = allLogs
 
