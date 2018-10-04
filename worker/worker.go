@@ -78,7 +78,7 @@ func (self *Worker) VerifyBlock() error {
 	// 6. verify every transactions in the block by evm
 	for i, tx := range self.block.Transactions {
 		self.chain.Prepare(vcommon.TxHash(tx), vcommon.HeaderHash(self.block), i)
-		receipt, _, err := self.VerifyTransaction(self.block.Header.Coinbase, gp, self.block.Header, tx, new(uint64))
+		receipt, _, err := self.VerifyTransaction(self.block.Header.CoinBase, gp, self.block.Header, tx, new(uint64))
 		if err != nil {
 			log.Error("Txs %v verify failed with error %v.", vcommon.TxHash(tx), err)
 			return err

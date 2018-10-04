@@ -97,6 +97,6 @@ func digestHeader(header *types.Header) *types.Header {
 		ReceiptsRoot:  header.ReceiptsRoot,
 		Height:        header.Height,
 		Timestamp:     header.Timestamp,
-		Coinbase:      header.Coinbase,
+		CoinBase:      header.CoinBase,
 	}
 }
