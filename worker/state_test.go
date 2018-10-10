@@ -3,13 +3,14 @@ package worker
 import (
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/evm-NG"
-	"github.com/DSiSc/monkey"
 	"github.com/DSiSc/validator/worker/common"
 	"github.com/stretchr/testify/assert"
 	"math/big"
-	"reflect"
 	"testing"
 	"time"
+	"reflect"
+	"github.com/DSiSc/monkey"
+	"github.com/DSiSc/blockchain"
 )
 
 var MockHash = types.Hash{
@@ -65,15 +66,24 @@ func TestNewStateTransition(t *testing.T) {
 	assert.NotNil(t, state.tx)
 }
 
-func TestApplyTransaction(t *testing.T) {
-}
-
 func TestStateTransition_TransitionDb(t *testing.T) {
 	// test carets contract
 	state.tx.Data.Recipient = nil
+	evmNg := &evm.EVM{
+		StateDB: nil,
+	}
+	var gp = common.GasPool(10000)
+	state = NewStateTransition(evmNg, MockTrx, &gp)
 	var evmd *evm.EVM
 	monkey.PatchInstanceMethod(reflect.TypeOf(evmd), "Create", func(*evm.EVM, evm.ContractRef, []byte, uint64, *big.Int) ([]byte, types.Address, uint64, error) {
 		return to[:10], contractAddress, 0, evm.ErrInsufficientBalance
+	})
+    var bc *blockchain.BlockChain
+	monkey.PatchInstanceMethod(reflect.TypeOf(bc), "GetBalance", func(*blockchain.BlockChain, types.Address) *big.Int {
+		return new(big.Int).SetUint64(1000)
+	})
+	monkey.PatchInstanceMethod(reflect.TypeOf(bc), "SubBalance", func(*blockchain.BlockChain, types.Address, *big.Int) {
+		return
 	})
 	ret, used, ok, err := state.TransitionDb()
 	assert.Equal(t, err, evm.ErrInsufficientBalance)

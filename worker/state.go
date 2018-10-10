@@ -60,9 +60,10 @@ func ApplyTransaction(evm *evmNg.EVM, tx *types.Transaction, gp *common.GasPool)
 // returning the result including the used gas. It returns an error if failed.
 // An error indicates a consensus issue.
 func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bool, err error) {
-	/*if err = st.preCheck(); err != nil {
+	if err = st.preCheck(); err != nil {
+		log.Error("Pre check is error: %v.", err)
 		return
-	}*/
+	}
 	from := *st.tx.Data.From
 	sender := vcommon.NewRefAddress(from)
 	//homestead := st.evm.ChainConfig().IsHomestead(st.evm.BlockNumber)
@@ -123,4 +124,22 @@ func (st *StateTransition) refundGas() {
 // gasUsed returns the amount of gas used up by the state transition.
 func (st *StateTransition) gasUsed() uint64 {
 	return st.initialGas - st.gas
+}
+
+func (st *StateTransition) preCheck() error {
+	return st.buyGas()
+}
+
+func (st *StateTransition) buyGas() error {
+	mgval := new(big.Int).Mul(new(big.Int).SetUint64(st.gas), st.gasPrice)
+	if st.state.GetBalance(st.from).Cmp(mgval) < 0 {
+		return common.ErrInsufficientBalanceForGas
+	}
+	if err := st.gp.SubGas(st.gas); err != nil {
+		return err
+	}
+	st.gas += st.gas
+	// st.initialGas = st.msg.Gas()
+	st.state.SubBalance(st.from, mgval)
+	return nil
 }
