@@ -8,6 +8,7 @@ import (
 	vcommon "github.com/DSiSc/validator/common"
 	"github.com/DSiSc/validator/worker/common"
 	"math/big"
+	"math"
 )
 
 type StateTransition struct {
@@ -83,11 +84,12 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		vmerr error
 	)
 	if contractCreation {
-		ret, _, st.gas, vmerr = evm.Create(sender, st.data, st.gas, st.value)
+		// ret, _, st.gas, vmerr = evm.Create(sender, st.data, st.gas, st.value)
+		ret, _, st.gas, vmerr = evm.Create(sender, st.data, math.MaxUint64, st.value)
 	} else {
 		// Increment the nonce for the next transaction
 		st.state.SetNonce(from, st.state.GetNonce(from)+1)
-		ret, st.gas, vmerr = evm.Call(sender, st.to, st.data, st.gas, st.value)
+		ret, st.gas, vmerr = evm.Call(sender, st.to, st.data, math.MaxUint64, st.value)
 	}
 	if vmerr != nil {
 		log.Error("VM returned with error %v.", vmerr)
@@ -98,8 +100,8 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 			return ret, 0, false, vmerr
 		}
 	}
-	st.refundGas()
-	st.state.AddBalance(st.evm.Coinbase, new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.gasPrice))
+	//st.refundGas()
+	//st.state.AddBalance(st.evm.Coinbase, new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.gasPrice))
 
 	return ret, st.gasUsed(), true, vmerr
 }
