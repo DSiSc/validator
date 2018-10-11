@@ -2,16 +2,24 @@ package common
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"encoding/json"
+	gconf "github.com/DSiSc/craft/config"
 	"github.com/DSiSc/craft/log"
 	"github.com/DSiSc/craft/types"
+	"github.com/DSiSc/crypto-suite/crypto/sha3"
 )
 
-// TODO: Hash algorithm will support configurable later
-// Sum returns the first 20 bytes of SHA256 of the bz.
+// Sum returns the first 32 bytes of hash of the bz.
 func Sum(bz []byte) []byte {
-	hash := sha256.Sum256(bz)
+	var alg string
+	if value, ok := gconf.GlobalConfig.Load(gconf.HashAlgName); ok {
+		alg = value.(string)
+	} else {
+		alg = "SHA256"
+	}
+	hasher := sha3.NewHashByAlgName(alg)
+	hasher.Write(bz)
+	hash := hasher.Sum(nil)
 	return hash[:types.HashLength]
 }
 
@@ -21,14 +29,14 @@ func TxHash(tx *types.Transaction) types.Hash {
 	}
 	hashData := types.TxData{
 		AccountNonce: tx.Data.AccountNonce,
-		Price: tx.Data.Price,
-		GasLimit:tx.Data.GasLimit,
-		Recipient:tx.Data.Recipient,
-		Amount:tx.Data.Amount,
-		Payload:tx.Data.Payload,
-		V: tx.Data.V,
-		R: tx.Data.R,
-		S: tx.Data.S,
+		Price:        tx.Data.Price,
+		GasLimit:     tx.Data.GasLimit,
+		Recipient:    tx.Data.Recipient,
+		Amount:       tx.Data.Amount,
+		Payload:      tx.Data.Payload,
+		V:            tx.Data.V,
+		R:            tx.Data.R,
+		S:            tx.Data.S,
 	}
 	jsonByte, _ := json.Marshal(hashData)
 	sumByte := Sum(jsonByte)
