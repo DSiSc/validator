@@ -7,8 +7,8 @@ import (
 	evmNg "github.com/DSiSc/evm-NG"
 	vcommon "github.com/DSiSc/validator/common"
 	"github.com/DSiSc/validator/worker/common"
-	"math/big"
 	"math"
+	"math/big"
 )
 
 type StateTransition struct {
@@ -97,7 +97,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		}
 	}
 
-	return ret, st.gasUsed(), true, vmerr
+	return ret, st.gasUsed(), vmerr != nil, vmerr
 }
 
 func (st *StateTransition) refundGas() {
