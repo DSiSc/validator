@@ -144,7 +144,7 @@ func (self *Worker) VerifyTransaction(author types.Address, gp *common.GasPool, 
 	receipt.GasUsed = gas
 	// if the transaction created a contract, store the creation address in the receipt.
 	if tx.Data.Recipient == nil {
-		receipt.ContractAddress = crypto.CreateAddress(evmEnv.Context.Origin, uint64(0))
+		receipt.ContractAddress = crypto.CreateAddress(evmEnv.Context.Origin, tx.Data.AccountNonce)
 		log.Info("Contract address of tx [%v] is [%v]", receipt.TxHash, receipt.ContractAddress)
 	}
 	// Set the receipt logs and create a bloom for filtering
