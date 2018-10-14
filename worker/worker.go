@@ -80,7 +80,7 @@ func (self *Worker) VerifyBlock() error {
 		self.chain.Prepare(vcommon.TxHash(tx), vcommon.HeaderHash(self.block), i)
 		receipt, _, err := self.VerifyTransaction(self.block.Header.CoinBase, gp, self.block.Header, tx, new(uint64))
 		if err != nil {
-			log.Error("Txs %v verify failed with error %v.", vcommon.TxHash(tx), err)
+			log.Error("Tx %x verify failed with error %v.", vcommon.TxHash(tx), err)
 			return err
 		}
 		receipts = append(receipts, receipt)
@@ -89,26 +89,26 @@ func (self *Worker) VerifyBlock() error {
 	receiptsHash := make([]types.Hash, 0, len(receipts))
 	for _, t := range receipts {
 		receiptsHash = append(receiptsHash, common.ReceiptHash(t))
-		log.Info("Record tx's [%v] receipt with hash [%v].", t.TxHash, common.ReceiptHash(t))
+		log.Info("Record tx's %x receipt with hash %x.", t.TxHash, common.ReceiptHash(t))
 	}
 	receiptHash := merkle_tree.ComputeMerkleRoot(receiptsHash)
 	var tempHash types.Hash
 	if !bytes.Equal(tempHash[:], self.block.Header.ReceiptsRoot[:]) {
-		log.Warn("Receipts root has assigned with %v.", self.block.Header.ReceiptsRoot)
+		log.Warn("Receipts root has assigned with %x.", self.block.Header.ReceiptsRoot)
 		if !bytes.Equal(receiptHash[:], self.block.Header.ReceiptsRoot[:]) {
-			log.Error("Receipts root has assigned with %v, but not consistent with %v.",
+			log.Error("Receipts root has assigned with %x, but not consistent with %x.",
 				self.block.Header.ReceiptsRoot, receiptHash)
 			return fmt.Errorf("receipts hash not consistent")
 		}
 	} else {
-		log.Info("Assign receipts hash %v to block %d.", receiptHash, self.block.Header.Height)
+		log.Info("Assign receipts hash %x to block %d.", receiptHash, self.block.Header.Height)
 		self.block.Header.ReceiptsRoot = receiptHash
 	}
 	// 7. verify digest if it exists
 	if !bytes.Equal(defaultHash[:], self.block.Header.MixDigest[:]) {
 		digestHash := vcommon.HeaderDigest(self.block.Header)
 		if !bytes.Equal(digestHash[:], self.block.Header.MixDigest[:]) {
-			log.Error("Block digest not consistent which assignment is [%v], while compute is [%v].",
+			log.Error("Block digest not consistent which assignment is [%x], while compute is [%x].",
 				self.block.Header.MixDigest, digestHash)
 			return fmt.Errorf("digest not consistent")
 		}
@@ -130,7 +130,7 @@ func (self *Worker) VerifyTransaction(author types.Address, gp *common.GasPool, 
 	evmEnv := evm.NewEVM(context, self.chain)
 	_, gas, failed, err := ApplyTransaction(evmEnv, tx, gp)
 	if err != nil {
-		log.Error("Apply transaction %v failed with error %v.", vcommon.TxHash(tx), err)
+		log.Error("Apply transaction %x failed with error %v.", vcommon.TxHash(tx), err)
 		return nil, 0, err
 	}
 
@@ -145,7 +145,7 @@ func (self *Worker) VerifyTransaction(author types.Address, gp *common.GasPool, 
 	// if the transaction created a contract, store the creation address in the receipt.
 	if tx.Data.Recipient == nil {
 		receipt.ContractAddress = crypto.CreateAddress(evmEnv.Context.Origin, tx.Data.AccountNonce)
-		log.Info("Contract address of tx [%v] is [%v]", receipt.TxHash, receipt.ContractAddress)
+		log.Info("Contract address of tx [%x] is [%v]", receipt.TxHash, receipt.ContractAddress)
 	}
 	// Set the receipt logs and create a bloom for filtering
 	// receipt.Logs = self.chain.GetLogs(tx.Hash())
