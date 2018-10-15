@@ -35,7 +35,7 @@ func Test_Verify(t *testing.T) {
 	assert.Equal(signer, tools.HexToAddress("333c3310824b7c685133f2bedb2ca4b8b4df633d"))
 	NoSignDigest := tools.HexToAddress("b94f5374fce5edbc8e2a8697c15331677e6ebf00")
 	_, err = Verify(common.ByteToHash(MockSignData), NoSignDigest[:])
-	expect := fmt.Errorf("Invalid signData.")
+	expect := fmt.Errorf("invalid signData")
 	assert.Equal(expect, err)
 }
 

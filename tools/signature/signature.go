@@ -46,7 +46,7 @@ func Verify(pubKey keypair.PublicKey, signature []byte) (types.Address, error) {
 			return validators[i], nil
 		}
 	}
-	return *new(types.Address), fmt.Errorf("Invalid signData.")
+	return *new(types.Address), fmt.Errorf("invalid signData")
 }
 
 // VerifyMultiSignature check whether more than m sigs are signed by the keys

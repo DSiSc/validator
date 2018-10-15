@@ -78,7 +78,7 @@ func doubleSha256(s []types.Hash) types.Hash {
 
 func newMerkleTree(hashes []types.Hash) (*merkleTree, error) {
 	if len(hashes) == 0 {
-		return nil, errors.New("NewMerkleTree input no item error.")
+		return nil, errors.New("hashes is empty")
 	}
 	var height uint
 
