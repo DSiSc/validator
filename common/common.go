@@ -46,17 +46,15 @@ func TxHash(tx *types.Transaction) types.Hash {
 	return temp
 }
 
-func HeaderHash(block *types.Block) (hash types.Hash) {
+func HeaderHash(block *types.Block) types.Hash {
 	var defaultHash types.Hash
 	if !bytes.Equal(block.HeaderHash[:], defaultHash[:]) {
-		log.Info("block hash %x has exits.", block.HeaderHash)
-		copy(hash[:], block.HeaderHash[:])
-		return
+		return block.HeaderHash
 	}
 	jsonByte, _ := json.Marshal(block.Header)
 	sumByte := Sum(jsonByte)
-	copy(hash[:], sumByte)
-	return
+	copy(defaultHash[:], sumByte)
+	return defaultHash
 }
 
 type RefAddress struct {
