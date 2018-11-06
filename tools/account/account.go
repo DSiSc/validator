@@ -10,6 +10,7 @@ type Account struct {
 	PublicKey  keypair.PublicKey
 	Address    types.Address
 	SigScheme  keypair.SignatureScheme
+	Extension  AccountExtension
 }
 
 func (*Account) PrivKey() keypair.PrivateKey {
@@ -25,4 +26,9 @@ func (*Account) Scheme() keypair.SignatureScheme {
 	//var temp keypair.SignatureScheme
 	var byt byte = 'a'
 	return keypair.SignatureScheme(byt)
+}
+
+type AccountExtension struct {
+	Id  uint64
+	Url string
 }
