@@ -38,8 +38,12 @@ func verifySpecifiedAddress(pubKey []byte, signData []byte, validatorAddress typ
 
 // Verify check the signature of data using pubKey
 func Verify(pubKey keypair.PublicKey, signature []byte) (types.Address, error) {
-	adminAddres := tools.HexToAddress("333c3310824b7c685133f2bedb2ca4b8b4df633d")
-	var validators = []types.Address{adminAddres}
+	var validators = []types.Address{
+		tools.HexToAddress("333c3310824b7c685133f2bedb2ca4b8b4df633d"),
+		tools.HexToAddress("343c3310824b7c685133f2bedb2ca4b8b4df633d"),
+		tools.HexToAddress("353c3310824b7c685133f2bedb2ca4b8b4df633d"),
+		tools.HexToAddress("363c3310824b7c685133f2bedb2ca4b8b4df633d"),
+	}
 	pkey := common.HashToByte(pubKey.(types.Hash))
 	for i := 0; i < len(validators); i++ {
 		if verifySpecifiedAddress(pkey, signature, validators[i]) {
