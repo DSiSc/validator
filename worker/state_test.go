@@ -90,4 +90,5 @@ func TestStateTransition_TransitionDb(t *testing.T) {
 	assert.Equal(t, ok, false)
 	assert.Equal(t, uint64(0), used)
 	assert.Equal(t, to[:10], ret)
+	monkey.UnpatchAll()
 }

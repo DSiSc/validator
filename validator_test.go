@@ -92,4 +92,5 @@ func TestValidateBlock(t *testing.T) {
 	assert.Nil(err)
 	assert.NotNil(header)
 	assert.Equal(MockHash[:], mockBlock.Header.SigData[0][:])
+	monkey.UnpatchAll()
 }

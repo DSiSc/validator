@@ -89,7 +89,7 @@ func TestWorker_VerifyTrsSignature(t *testing.T) {
 	})
 	ok = worker.VerifyTrsSignature(mockTransaction)
 	assert.Equal(t, false, ok)
-	monkey.Unpatch(wallett.Sender)
+	monkey.UnpatchAll()
 }
 
 func TestWorker_VerifyBlock(t *testing.T) {
@@ -166,6 +166,7 @@ func TestWorker_VerifyBlock(t *testing.T) {
 	worker.block.Header.ReceiptsRoot = tmp
 	err = worker.VerifyBlock()
 	assert.Nil(err)
+	monkey.UnpatchAll()
 
 }
 
@@ -227,6 +228,7 @@ func TestWorker_VerifyTransaction(t *testing.T) {
 	receipit, gas, err = worker.VerifyTransaction(addressA, nil, nil, mockTrx, &usedGas)
 	assert.Equal(addressNew, receipit.ContractAddress)
 	assert.Equal(uint64(10), gas)
+	monkey.UnpatchAll()
 }
 
 func TestWorker_GetReceipts(t *testing.T) {
