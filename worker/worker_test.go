@@ -234,5 +234,6 @@ func TestWorker_VerifyTransaction(t *testing.T) {
 func TestWorker_GetReceipts(t *testing.T) {
 	assert := assert.New(t)
 	worker := NewWorker(nil, nil)
-	assert.Equal(0, len(worker.receipts))
+	receipts := worker.GetReceipts()
+	assert.Equal(len(receipts), len(worker.receipts))
 }

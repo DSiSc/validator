@@ -169,5 +169,6 @@ func (self *Worker) VerifyTrsSignature(tx *types.Transaction) bool {
 }
 
 func (self *Worker) GetReceipts() types.Receipts {
+	log.Debug("Get receipts.")
 	return self.receipts
 }
