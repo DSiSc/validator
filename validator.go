@@ -12,7 +12,8 @@ import (
 )
 
 type Validator struct {
-	Account *account.Account
+	Account  *account.Account
+	Receipts types.Receipts
 }
 
 func NewValidator(account *account.Account) *Validator {
@@ -32,6 +33,7 @@ func (self *Validator) ValidateBlock(block *types.Block) (*types.Header, error) 
 	if nil != err {
 		return nil, err
 	}
+	self.Receipts = work.GetReceipts()
 	// sign the block
 	sign, ok := signature.Sign(self.Account, block.Header.MixDigest[:])
 	if ok != nil {

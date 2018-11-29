@@ -53,10 +53,13 @@ func Test_Verify(t *testing.T) {
 	assert.Equal(expect, err)
 
 	digest := tools.FromHex("f3b6a8c32257a09ce1b510234fed018212e2910fbad95ba42b1e9e333932bf3f")
-	signa := tools.FromHex("c78a9bd3a01cdcf4b086e29d94c1a53aa63df232000000000000000000000000")
+	var MockAccount1 = &account.Account{
+		Address: types.Address{0x33, 0x3c, 0x33, 0x10, 0x82, 0x4b, 0x7c, 0x68, 0x51, 0x33, 0xf2, 0xbe, 0xdb, 0x2c, 0xa4, 0xb8, 0xb4, 0xdf, 0x63, 0x3d},
+	}
+	signature, err := Sign(MockAccount1, digest)
 	var b types.Hash
 	setBytes(digest, &b)
-	address, err := Verify(b, signa)
+	address, err := Verify(b, signature)
 	assert.Nil(err)
 	assert.NotNil(address)
 	assert.Equal(MockAccount1.Address, address)
