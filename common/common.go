@@ -83,7 +83,7 @@ func ByteToHash(data []byte) (hash types.Hash) {
 func HeaderDigest(header *types.Header) (hash types.Hash) {
 	var defaultHash types.Hash
 	if !bytes.Equal(header.MixDigest[:], defaultHash[:]) {
-		log.Info("header hash %x has exits.", header.MixDigest)
+		log.Info("header digest %x with height %d has exits.", header.MixDigest, header.Height)
 		copy(hash[:], header.MixDigest[:])
 		return
 	}
