@@ -110,10 +110,10 @@ func (self *Worker) VerifyBlock() error {
 		if !bytes.Equal(digestHash[:], self.block.Header.MixDigest[:]) {
 			log.Error("Block digest not consistent which assignment is [%x], while compute is [%x].",
 				self.block.Header.MixDigest, digestHash)
-			return fmt.Errorf("digest not consistent")
+			return fmt.Errorf("digest not in coincidence")
 		}
 	}
-
+    // TODO 8. verify state root
 	self.receipts = receipts
 	self.logs = allLogs
 

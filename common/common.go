@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	gconf "github.com/DSiSc/craft/config"
-	"github.com/DSiSc/craft/log"
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/crypto-suite/crypto/sha3"
 )
@@ -83,7 +82,6 @@ func ByteToHash(data []byte) (hash types.Hash) {
 func HeaderDigest(header *types.Header) (hash types.Hash) {
 	var defaultHash types.Hash
 	if !bytes.Equal(header.MixDigest[:], defaultHash[:]) {
-		log.Info("header digest %x with height %d has exits.", header.MixDigest, header.Height)
 		copy(hash[:], header.MixDigest[:])
 		return
 	}
