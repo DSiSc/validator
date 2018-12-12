@@ -1,7 +1,6 @@
 package common
 
 import (
-	"bytes"
 	"encoding/json"
 	gconf "github.com/DSiSc/craft/config"
 	"github.com/DSiSc/craft/types"
@@ -46,14 +45,14 @@ func TxHash(tx *types.Transaction) types.Hash {
 }
 
 func HeaderHash(block *types.Block) types.Hash {
-	var defaultHash types.Hash
-	if !bytes.Equal(block.HeaderHash[:], defaultHash[:]) {
+	var headerHash types.Hash
+	if !(block.HeaderHash == types.Hash{}) {
 		return block.HeaderHash
 	}
 	jsonByte, _ := json.Marshal(block.Header)
 	sumByte := Sum(jsonByte)
-	copy(defaultHash[:], sumByte)
-	return defaultHash
+	copy(headerHash[:], sumByte)
+	return headerHash
 }
 
 type RefAddress struct {
@@ -80,8 +79,7 @@ func ByteToHash(data []byte) (hash types.Hash) {
 }
 
 func HeaderDigest(header *types.Header) (hash types.Hash) {
-	var defaultHash types.Hash
-	if !bytes.Equal(header.MixDigest[:], defaultHash[:]) {
+	if !(header.MixDigest == types.Hash{}) {
 		copy(hash[:], header.MixDigest[:])
 		return
 	}

@@ -61,15 +61,13 @@ func (self *Worker) VerifyBlock() error {
 			txsHash, self.block.Header.TxRoot)
 	}
 	//5. header hash
-	var defaultHash types.Hash
-	if !bytes.Equal(defaultHash[:], self.block.HeaderHash[:]) {
+	if !(self.block.HeaderHash == types.Hash{}) {
 		headerHash := vcommon.HeaderHash(self.block)
 		if self.block.HeaderHash != headerHash {
 			return fmt.Errorf("wrong Block.HeaderHash, expected %x, got %x",
 				headerHash, self.block.HeaderHash)
 		}
 	}
-
 	var (
 		receipts types.Receipts
 		allLogs  []*types.Log
@@ -92,10 +90,9 @@ func (self *Worker) VerifyBlock() error {
 		log.Debug("Record tx %x receipt is %x.", t.TxHash, common.ReceiptHash(t))
 	}
 	receiptHash := merkle_tree.ComputeMerkleRoot(receiptsHash)
-	var tempHash types.Hash
-	if !bytes.Equal(tempHash[:], self.block.Header.ReceiptsRoot[:]) {
+	if !(self.block.Header.ReceiptsRoot == types.Hash{}) {
 		log.Warn("Receipts root has assigned with %x.", self.block.Header.ReceiptsRoot)
-		if !bytes.Equal(receiptHash[:], self.block.Header.ReceiptsRoot[:]) {
+		if !(receiptHash == self.block.Header.ReceiptsRoot) {
 			log.Error("Receipts root has assigned with %x, but not consistent with %x.",
 				self.block.Header.ReceiptsRoot, receiptHash)
 			return fmt.Errorf("receipts hash not consistent")
@@ -105,7 +102,7 @@ func (self *Worker) VerifyBlock() error {
 		self.block.Header.ReceiptsRoot = receiptHash
 	}
 	// 7. verify digest if it exists
-	if !bytes.Equal(defaultHash[:], self.block.Header.MixDigest[:]) {
+	if !(self.block.Header.MixDigest == types.Hash{}) {
 		digestHash := vcommon.HeaderDigest(self.block.Header)
 		if !bytes.Equal(digestHash[:], self.block.Header.MixDigest[:]) {
 			log.Error("Block digest not consistent which assignment is [%x], while compute is [%x].",
@@ -113,7 +110,7 @@ func (self *Worker) VerifyBlock() error {
 			return fmt.Errorf("digest not in coincidence")
 		}
 	}
-    // TODO 8. verify state root
+	// TODO 8. verify state root
 	self.receipts = receipts
 	self.logs = allLogs
 
