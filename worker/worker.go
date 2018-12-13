@@ -119,10 +119,12 @@ func (self *Worker) VerifyBlock() error {
 
 func (self *Worker) VerifyTransaction(author types.Address, gp *common.GasPool, header *types.Header,
 	tx *types.Transaction, usedGas *uint64) (*types.Receipt, uint64, error) {
-	if self.VerifyTrsSignature(tx) == false {
-		log.Error("Transaction signature verify failed.")
-		return nil, 0, fmt.Errorf("transaction signature failed")
-	}
+	// txs signature has been verified by tx switch already, so ignore it here
+	/*
+		if self.VerifyTrsSignature(tx) == false {
+			log.Error("Transaction signature verify failed.")
+			return nil, 0, fmt.Errorf("transaction signature failed")
+		}*/
 	context := evm.NewEVMContext(*tx, header, self.chain, author)
 	evmEnv := evm.NewEVM(context, self.chain)
 	_, gas, failed, err := ApplyTransaction(evmEnv, tx, gp)

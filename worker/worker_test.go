@@ -174,17 +174,6 @@ func TestWorker_VerifyTransaction(t *testing.T) {
 	assert := assert.New(t)
 	worker := NewWorker(nil, nil)
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(worker), "VerifyTrsSignature", func(*Worker, *types.Transaction) bool {
-		return false
-	})
-	receipit, gas, err := worker.VerifyTransaction(addressA, nil, nil, nil, nil)
-	assert.Error(err, fmt.Errorf("transaction signature failed"))
-	assert.Nil(receipit)
-	assert.Equal(uint64(0), gas)
-
-	monkey.PatchInstanceMethod(reflect.TypeOf(worker), "VerifyTrsSignature", func(*Worker, *types.Transaction) bool {
-		return true
-	})
 	monkey.Patch(evm.NewEVMContext, func(types.Transaction, *types.Header, *blockchain.BlockChain, types.Address) evm.Context {
 		return evm.Context{
 			GasLimit: uint64(65536),
@@ -203,7 +192,7 @@ func TestWorker_VerifyTransaction(t *testing.T) {
 			Payload:      addressB[:10],
 		},
 	}
-	receipit, gas, err = worker.VerifyTransaction(addressA, nil, nil, mockTrx, nil)
+	receipit, gas, err := worker.VerifyTransaction(addressA, nil, nil, mockTrx, nil)
 	assert.Equal(err, fmt.Errorf("Apply failed."))
 	assert.Nil(receipit)
 	assert.Equal(uint64(0), gas)
