@@ -20,7 +20,7 @@ import (
 
 func TestNewWorker(t *testing.T) {
 	assert := assert.New(t)
-	var worker = NewWorker(nil, nil)
+	var worker = NewWorker(nil, nil, false)
 	assert.NotNil(worker)
 	assert.Nil(worker.block)
 	assert.Nil(worker.chain)
@@ -74,7 +74,7 @@ func TestWorker_VerifyTrsSignature(t *testing.T) {
 		},
 	}
 	mockTransaction, _ := wallett.SignTx(mockTrx, new(wallett.FrontierSigner), key)
-	worker := NewWorker(nil, nil)
+	worker := NewWorker(nil, nil, false)
 	ok := worker.VerifyTrsSignature(mockTransaction)
 	assert.Equal(t, true, ok)
 
@@ -101,7 +101,7 @@ func TestWorker_VerifyBlock(t *testing.T) {
 			Height:  uint64(1),
 		},
 	}
-	worker := NewWorker(nil, mockBlock)
+	worker := NewWorker(nil, mockBlock, false)
 
 	monkey.PatchInstanceMethod(reflect.TypeOf(blockChain), "GetCurrentBlock", func(*blockchain.BlockChain) *types.Block {
 		return &types.Block{
@@ -172,7 +172,7 @@ func TestWorker_VerifyBlock(t *testing.T) {
 
 func TestWorker_VerifyTransaction(t *testing.T) {
 	assert := assert.New(t)
-	worker := NewWorker(nil, nil)
+	worker := NewWorker(nil, nil, false)
 
 	monkey.Patch(evm.NewEVMContext, func(types.Transaction, *types.Header, *blockchain.BlockChain, types.Address) evm.Context {
 		return evm.Context{
@@ -222,7 +222,7 @@ func TestWorker_VerifyTransaction(t *testing.T) {
 
 func TestWorker_GetReceipts(t *testing.T) {
 	assert := assert.New(t)
-	worker := NewWorker(nil, nil)
+	worker := NewWorker(nil, nil, false)
 	receipts := worker.GetReceipts()
 	assert.Equal(len(receipts), len(worker.receipts))
 }

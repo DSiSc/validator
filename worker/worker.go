@@ -15,16 +15,18 @@ import (
 )
 
 type Worker struct {
-	block    *types.Block
-	chain    *blockchain.BlockChain
-	receipts types.Receipts
-	logs     []*types.Log
+	block     *types.Block
+	chain     *blockchain.BlockChain
+	receipts  types.Receipts
+	logs      []*types.Log
+	signature bool
 }
 
-func NewWorker(chain *blockchain.BlockChain, block *types.Block) *Worker {
+func NewWorker(chain *blockchain.BlockChain, block *types.Block, signVerify bool) *Worker {
 	return &Worker{
-		block: block,
-		chain: chain,
+		block:     block,
+		chain:     chain,
+		signature: signVerify,
 	}
 }
 
@@ -120,11 +122,12 @@ func (self *Worker) VerifyBlock() error {
 func (self *Worker) VerifyTransaction(author types.Address, gp *common.GasPool, header *types.Header,
 	tx *types.Transaction, usedGas *uint64) (*types.Receipt, uint64, error) {
 	// txs signature has been verified by tx switch already, so ignore it here
-	/*
+	if self.signature {
 		if self.VerifyTrsSignature(tx) == false {
 			log.Error("Transaction signature verify failed.")
 			return nil, 0, fmt.Errorf("transaction signature failed")
-		}*/
+		}
+	}
 	context := evm.NewEVMContext(*tx, header, self.chain, author)
 	evmEnv := evm.NewEVM(context, self.chain)
 	_, gas, failed, err := ApplyTransaction(evmEnv, tx, gp)

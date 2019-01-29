@@ -22,13 +22,13 @@ func NewValidator(account *account.Account) *Validator {
 	}
 }
 
-func (self *Validator) ValidateBlock(block *types.Block) (*types.Header, error) {
+func (self *Validator) ValidateBlock(block *types.Block, signVerify bool) (*types.Header, error) {
 	chain, err := blockchain.NewLatestStateBlockChain()
 	if err != nil {
 		return nil, fmt.Errorf("get NewLatestStateBlockChain error:%s ", err)
 	}
 	// new worker to verify the block
-	work := worker.NewWorker(chain, block)
+	work := worker.NewWorker(chain, block, signVerify)
 	err = work.VerifyBlock()
 	if nil != err {
 		return nil, err
