@@ -85,10 +85,11 @@ func TestStateTransition_TransitionDb(t *testing.T) {
 	monkey.PatchInstanceMethod(reflect.TypeOf(bc), "SubBalance", func(*blockchain.BlockChain, types.Address, *big.Int) {
 		return
 	})
-	ret, used, ok, err := state.TransitionDb()
+	ret, used, ok, err, address := state.TransitionDb()
 	assert.Equal(t, err, evm.ErrInsufficientBalance)
 	assert.Equal(t, ok, false)
 	assert.Equal(t, uint64(0), used)
 	assert.Equal(t, to[:10], ret)
+	assert.Equal(t, contractAddress, address)
 	monkey.UnpatchAll()
 }

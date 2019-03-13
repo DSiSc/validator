@@ -53,14 +53,14 @@ func NewStateTransition(evm *evmNg.EVM, trx *types.Transaction, gp *common.GasPo
 // the gas used (which includes gas refunds) and an error if it failed. An error always
 // indicates a core error meaning that the message would always fail for that particular
 // state and would never be accepted within a block.
-func ApplyTransaction(evm *evmNg.EVM, tx *types.Transaction, gp *common.GasPool) ([]byte, uint64, bool, error) {
+func ApplyTransaction(evm *evmNg.EVM, tx *types.Transaction, gp *common.GasPool) ([]byte, uint64, bool, error, types.Address) {
 	return NewStateTransition(evm, tx, gp).TransitionDb()
 }
 
 // TransitionDb will transition the state by applying the current message and
 // returning the result including the used gas. It returns an error if failed.
 // An error indicates a consensus issue.
-func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bool, err error) {
+func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bool, err error, address types.Address) {
 	from := *st.tx.Data.From
 	sender := vcommon.NewRefAddress(from)
 	//homestead := st.evm.ChainConfig().IsHomestead(st.evm.BlockNumber)
@@ -76,12 +76,13 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		}
 	*/
 	var (
-		evm   = st.evm
-		vmerr error
+		evm             = st.evm
+		vmerr           error
+		contractAddress types.Address
 	)
 	if contractCreation {
 		// ret, _, st.gas, vmerr = evm.Create(sender, st.data, st.gas, st.value)
-		ret, _, st.gas, vmerr = evm.Create(sender, st.data, math.MaxUint64, st.value, st.tx.Data.AccountNonce)
+		ret, contractAddress, st.gas, vmerr = evm.Create(sender, st.data, math.MaxUint64, st.value, st.tx.Data.AccountNonce)
 	} else {
 		// Increment the nonce for the next transaction
 		st.state.SetNonce(from, st.tx.Data.AccountNonce)
@@ -93,11 +94,11 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		// sufficient balance to make the transfer happen. The first
 		// balance transfer may never fail.
 		if vmerr == evmNg.ErrInsufficientBalance {
-			return ret, 0, false, vmerr
+			return ret, 0, false, vmerr, contractAddress
 		}
 	}
 
-	return ret, st.gasUsed(), vmerr != nil, vmerr
+	return ret, st.gasUsed(), vmerr != nil, vmerr, contractAddress
 }
 
 func (st *StateTransition) refundGas() {

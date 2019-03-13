@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/types"
-	"github.com/DSiSc/crypto-suite/crypto"
 	"github.com/DSiSc/evm-NG"
 	"github.com/DSiSc/monkey"
 	"github.com/DSiSc/validator/common"
@@ -179,8 +178,8 @@ func TestWorker_VerifyTransaction(t *testing.T) {
 			GasLimit: uint64(65536),
 		}
 	})
-	monkey.Patch(ApplyTransaction, func(*evm.EVM, *types.Transaction, *workerc.GasPool) ([]byte, uint64, bool, error) {
-		return addressA[:10], uint64(0), false, fmt.Errorf("Apply failed.")
+	monkey.Patch(ApplyTransaction, func(*evm.EVM, *types.Transaction, *workerc.GasPool) ([]byte, uint64, bool, error, types.Address) {
+		return addressA[:10], uint64(0), false, fmt.Errorf("Apply failed."), types.Address{}
 	})
 	mockTrx := &types.Transaction{
 		Data: types.TxData{
@@ -192,31 +191,10 @@ func TestWorker_VerifyTransaction(t *testing.T) {
 			Payload:      addressB[:10],
 		},
 	}
-	receipit, gas, err := worker.VerifyTransaction(addressA, nil, nil, mockTrx, nil)
+	receipt, gas, err := worker.VerifyTransaction(addressA, nil, nil, mockTrx, nil)
 	assert.Equal(err, fmt.Errorf("Apply failed."))
-	assert.Nil(receipit)
+	assert.Nil(receipt)
 	assert.Equal(uint64(0), gas)
-
-	monkey.Patch(ApplyTransaction, func(*evm.EVM, *types.Transaction, *workerc.GasPool) ([]byte, uint64, bool, error) {
-		return addressA[:10], uint64(10), true, nil
-	})
-	var blockChain *blockchain.BlockChain
-	monkey.PatchInstanceMethod(reflect.TypeOf(blockChain), "IntermediateRoot", func(*blockchain.BlockChain, bool) types.Hash {
-		return MockHash
-	})
-	monkey.Patch(crypto.CreateAddress, func(types.Address, uint64) types.Address {
-		return addressNew
-	})
-	monkey.Patch(evm.NewEVMContext, func(types.Transaction, *types.Header, *blockchain.BlockChain, types.Address) evm.Context {
-		return evm.Context{
-			GasLimit: uint64(65536),
-		}
-	})
-	mockTrx.Data.Recipient = nil
-	var usedGas = uint64(10)
-	receipit, gas, err = worker.VerifyTransaction(addressA, nil, nil, mockTrx, &usedGas)
-	assert.Equal(addressNew, receipit.ContractAddress)
-	assert.Equal(uint64(10), gas)
 	monkey.UnpatchAll()
 }
 

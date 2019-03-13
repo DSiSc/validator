@@ -6,7 +6,6 @@ import (
 	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/log"
 	"github.com/DSiSc/craft/types"
-	"github.com/DSiSc/crypto-suite/crypto"
 	"github.com/DSiSc/evm-NG"
 	vcommon "github.com/DSiSc/validator/common"
 	"github.com/DSiSc/validator/tools/merkle_tree"
@@ -130,7 +129,7 @@ func (self *Worker) VerifyTransaction(author types.Address, gp *common.GasPool, 
 	}
 	context := evm.NewEVMContext(*tx, header, self.chain, author)
 	evmEnv := evm.NewEVM(context, self.chain)
-	_, gas, failed, err := ApplyTransaction(evmEnv, tx, gp)
+	_, gas, failed, err, contractAddress := ApplyTransaction(evmEnv, tx, gp)
 	if err != nil {
 		log.Error("Apply transaction %x failed with error %v.", vcommon.TxHash(tx), err)
 		return nil, 0, err
@@ -146,12 +145,12 @@ func (self *Worker) VerifyTransaction(author types.Address, gp *common.GasPool, 
 	receipt.GasUsed = gas
 	// if the transaction created a contract, store the creation address in the receipt.
 	if tx.Data.Recipient == nil {
-		receipt.ContractAddress = crypto.CreateAddress(evmEnv.Context.Origin, tx.Data.AccountNonce)
 		log.Info("Create contract with address %x within tx %x.", receipt.ContractAddress, receipt.TxHash)
+		receipt.ContractAddress = contractAddress
 	}
 	// Set the receipt logs and create a bloom for filtering
-	// receipt.Logs = self.chain.GetLogs(tx.Hash())
-	// receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
+	receipt.Logs = self.chain.GetLogs(receipt.TxHash)
+	receipt.Bloom = vcommon.CreateBloom(types.Receipts{receipt})
 
 	return receipt, gas, err
 }
