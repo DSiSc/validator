@@ -75,7 +75,7 @@ func TestStateTransition_TransitionDb(t *testing.T) {
 	var gp = common.GasPool(10000)
 	state = NewStateTransition(evmNg, MockTrx, &gp)
 	var evmd *evm.EVM
-	monkey.PatchInstanceMethod(reflect.TypeOf(evmd), "Create", func(*evm.EVM, evm.ContractRef, []byte, uint64, *big.Int, uint64) ([]byte, types.Address, uint64, error) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(evmd), "Create", func(*evm.EVM, evm.ContractRef, []byte, uint64, *big.Int) ([]byte, types.Address, uint64, error) {
 		return to[:10], contractAddress, 0, evm.ErrInsufficientBalance
 	})
 	var bc *blockchain.BlockChain
