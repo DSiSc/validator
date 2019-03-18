@@ -32,6 +32,11 @@ var MockBlock = &types.Block{
 	Transactions: make([]*types.Transaction, 0),
 }
 
+var from = &types.Address{
+	0xb1, 0x6f, 0x2b, 0x34, 0x2a, 0xab, 0x24, 0xbc, 0xf6, 0x3e,
+	0xa2, 0x18, 0xc6, 0xa9, 0x27, 0x4d, 0x30, 0xab, 0x9a, 0x15,
+}
+
 var to = &types.Address{
 	0xb2, 0x6f, 0x2b, 0x34, 0x2a, 0xab, 0x24, 0xbc, 0xf6, 0x3e,
 	0xa2, 0x18, 0xc6, 0xa9, 0x27, 0x4d, 0x30, 0xab, 0x9a, 0x15,
@@ -42,16 +47,18 @@ var contractAddress = types.Address{
 	0xa2, 0x18, 0xc6, 0xa9, 0x27, 0x4d, 0x30, 0xab, 0x9a, 0x16,
 }
 
-var MockTrx = &types.Transaction{
-	Data: types.TxData{
-		AccountNonce: 0,
-		Price:        new(big.Int).SetUint64(10),
-		GasLimit:     100,
-		Recipient:    to,
-		From:         to,
-		Amount:       new(big.Int).SetUint64(50),
-		Payload:      to[:10],
-	},
+func mockTrx() *types.Transaction {
+	return &types.Transaction{
+		Data: types.TxData{
+			AccountNonce: 0,
+			Price:        new(big.Int).SetUint64(10),
+			GasLimit:     100,
+			Recipient:    to,
+			From:         from,
+			Amount:       new(big.Int).SetUint64(50),
+			Payload:      to[:10],
+		},
+	}
 }
 
 var state *StateTransition
@@ -61,19 +68,19 @@ func TestNewStateTransition(t *testing.T) {
 		StateDB: nil,
 	}
 	var gp = common.GasPool(6)
-	state = NewStateTransition(evmNg, MockTrx, &gp)
+	state = NewStateTransition(evmNg, mockTrx(), &gp)
 	assert.NotNil(t, state.evm)
 	assert.NotNil(t, state.tx)
 }
 
 func TestStateTransition_TransitionDb(t *testing.T) {
 	// test carets contract
-	state.tx.Data.Recipient = nil
 	evmNg := &evm.EVM{
 		StateDB: nil,
 	}
 	var gp = common.GasPool(10000)
-	state = NewStateTransition(evmNg, MockTrx, &gp)
+	state = NewStateTransition(evmNg, mockTrx(), &gp)
+	state.tx.Data.Recipient = nil
 	var evmd *evm.EVM
 	monkey.PatchInstanceMethod(reflect.TypeOf(evmd), "Create", func(*evm.EVM, evm.ContractRef, []byte, uint64, *big.Int) ([]byte, types.Address, uint64, error) {
 		return to[:10], contractAddress, 0, evm.ErrInsufficientBalance
@@ -85,6 +92,9 @@ func TestStateTransition_TransitionDb(t *testing.T) {
 	monkey.PatchInstanceMethod(reflect.TypeOf(bc), "SubBalance", func(*blockchain.BlockChain, types.Address, *big.Int) {
 		return
 	})
+	monkey.PatchInstanceMethod(reflect.TypeOf(bc), "GetNonce", func(*blockchain.BlockChain, types.Address) uint64 {
+		return 0
+	})
 	ret, used, ok, err, address := state.TransitionDb()
 	assert.Equal(t, err, evm.ErrInsufficientBalance)
 	assert.Equal(t, ok, false)
@@ -92,4 +102,49 @@ func TestStateTransition_TransitionDb(t *testing.T) {
 	assert.Equal(t, to[:10], ret)
 	assert.Equal(t, contractAddress, address)
 	monkey.UnpatchAll()
+}
+
+func TestStateTransition_TransitionDb1(t *testing.T) {
+	defer monkey.UnpatchAll()
+	// test transfer token
+	evmNg := &evm.EVM{
+		StateDB: nil,
+	}
+	var gp = common.GasPool(10000)
+	state := NewStateTransition(evmNg, mockTrx(), &gp)
+	var evmd *evm.EVM
+	monkey.PatchInstanceMethod(reflect.TypeOf(evmd), "Create", func(*evm.EVM, evm.ContractRef, []byte, uint64, *big.Int) ([]byte, types.Address, uint64, error) {
+		return to[:10], contractAddress, 0, evm.ErrInsufficientBalance
+	})
+	var bc *blockchain.BlockChain
+	monkey.PatchInstanceMethod(reflect.TypeOf(bc), "GetBalance", func(*blockchain.BlockChain, types.Address) *big.Int {
+		return new(big.Int).SetUint64(1000)
+	})
+	monkey.PatchInstanceMethod(reflect.TypeOf(bc), "SubBalance", func(*blockchain.BlockChain, types.Address, *big.Int) {
+		return
+	})
+	monkey.PatchInstanceMethod(reflect.TypeOf(bc), "GetNonce", func(*blockchain.BlockChain, types.Address) uint64 {
+		return 0
+	})
+	monkey.PatchInstanceMethod(reflect.TypeOf(bc), "SetNonce", func(b *blockchain.BlockChain, a types.Address, n uint64) {
+		assert.Equal(t, uint64(1), n)
+		return
+	})
+	monkey.PatchInstanceMethod(reflect.TypeOf(evmd), "Call", func(*evm.EVM, evm.ContractRef, types.Address, []byte, uint64, *big.Int) ([]byte, uint64, error) {
+		return []byte{0}, 0, nil
+	})
+	ret, used, ok, err, _ := state.TransitionDb()
+	assert.Equal(t, nil, err)
+	assert.Equal(t, ok, false)
+	assert.Equal(t, uint64(0), used)
+	assert.Equal(t, []byte{0}, ret)
+
+	state.nonce = 100
+	ret, used, ok, err, _ = state.TransitionDb()
+	assert.NotNil(t, err)
+	monkey.PatchInstanceMethod(reflect.TypeOf(bc), "GetNonce", func(*blockchain.BlockChain, types.Address) uint64 {
+		return 3
+	})
+	ret, used, ok, err, _ = state.TransitionDb()
+	assert.NotNil(t, err)
 }
