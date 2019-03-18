@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"errors"
 	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/log"
 	"github.com/DSiSc/craft/types"
@@ -23,6 +24,7 @@ type StateTransition struct {
 	evm        *evmNg.EVM
 	from       types.Address
 	to         types.Address
+	nonce      uint64
 }
 
 // NewStateTransition initialises and returns a new state transition object.
@@ -44,6 +46,7 @@ func NewStateTransition(evm *evmNg.EVM, trx *types.Transaction, gp *common.GasPo
 		data:     trx.Data.Payload,
 		state:    evm.StateDB,
 		gas:      trx.Data.GasLimit,
+		nonce:    trx.Data.AccountNonce,
 	}
 }
 
@@ -61,6 +64,9 @@ func ApplyTransaction(evm *evmNg.EVM, tx *types.Transaction, gp *common.GasPool)
 // returning the result including the used gas. It returns an error if failed.
 // An error indicates a consensus issue.
 func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bool, err error, address types.Address) {
+	if err = st.preCheck(); err != nil {
+		return
+	}
 	from := *st.tx.Data.From
 	sender := vcommon.NewRefAddress(from)
 	//homestead := st.evm.ChainConfig().IsHomestead(st.evm.BlockNumber)
@@ -85,7 +91,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		ret, contractAddress, st.gas, vmerr = evm.Create(sender, st.data, math.MaxUint64, st.value)
 	} else {
 		// Increment the nonce for the next transaction
-		st.state.SetNonce(from, st.tx.Data.AccountNonce)
+		st.state.SetNonce(from, st.state.GetNonce(sender.Address())+1)
 		ret, st.gas, vmerr = evm.Call(sender, st.to, st.data, math.MaxUint64, st.value)
 	}
 	if vmerr != nil {
@@ -121,4 +127,16 @@ func (st *StateTransition) refundGas() {
 // gasUsed returns the amount of gas used up by the state transition.
 func (st *StateTransition) gasUsed() uint64 {
 	return st.initialGas - st.gas
+}
+
+// check tx's nonce
+func (st *StateTransition) preCheck() error {
+	// Make sure this transaction's nonce is correct.
+	nonce := st.state.GetNonce(st.from)
+	if nonce < st.nonce {
+		return errors.New("blacklisted hash")
+	} else if nonce > st.nonce {
+		return errors.New("nonce too high")
+	}
+	return nil
 }
