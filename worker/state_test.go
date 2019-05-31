@@ -1,10 +1,10 @@
 package worker
 
 import (
-	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/evm-NG"
 	"github.com/DSiSc/monkey"
+	"github.com/DSiSc/repository"
 	"github.com/DSiSc/validator/worker/common"
 	"github.com/stretchr/testify/assert"
 	"math/big"
@@ -85,14 +85,14 @@ func TestStateTransition_TransitionDb(t *testing.T) {
 	monkey.PatchInstanceMethod(reflect.TypeOf(evmd), "Create", func(*evm.EVM, evm.ContractRef, []byte, uint64, *big.Int) ([]byte, types.Address, uint64, error) {
 		return to[:10], contractAddress, 0, evm.ErrInsufficientBalance
 	})
-	var bc *blockchain.BlockChain
-	monkey.PatchInstanceMethod(reflect.TypeOf(bc), "GetBalance", func(*blockchain.BlockChain, types.Address) *big.Int {
+	var bc *repository.Repository
+	monkey.PatchInstanceMethod(reflect.TypeOf(bc), "GetBalance", func(*repository.Repository, types.Address) *big.Int {
 		return new(big.Int).SetUint64(1000)
 	})
-	monkey.PatchInstanceMethod(reflect.TypeOf(bc), "SubBalance", func(*blockchain.BlockChain, types.Address, *big.Int) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(bc), "SubBalance", func(*repository.Repository, types.Address, *big.Int) {
 		return
 	})
-	monkey.PatchInstanceMethod(reflect.TypeOf(bc), "GetNonce", func(*blockchain.BlockChain, types.Address) uint64 {
+	monkey.PatchInstanceMethod(reflect.TypeOf(bc), "GetNonce", func(*repository.Repository, types.Address) uint64 {
 		return 0
 	})
 	ret, used, ok, err, address := state.TransitionDb()
@@ -116,17 +116,17 @@ func TestStateTransition_TransitionDb1(t *testing.T) {
 	monkey.PatchInstanceMethod(reflect.TypeOf(evmd), "Create", func(*evm.EVM, evm.ContractRef, []byte, uint64, *big.Int) ([]byte, types.Address, uint64, error) {
 		return to[:10], contractAddress, 0, evm.ErrInsufficientBalance
 	})
-	var bc *blockchain.BlockChain
-	monkey.PatchInstanceMethod(reflect.TypeOf(bc), "GetBalance", func(*blockchain.BlockChain, types.Address) *big.Int {
+	var bc *repository.Repository
+	monkey.PatchInstanceMethod(reflect.TypeOf(bc), "GetBalance", func(*repository.Repository, types.Address) *big.Int {
 		return new(big.Int).SetUint64(1000)
 	})
-	monkey.PatchInstanceMethod(reflect.TypeOf(bc), "SubBalance", func(*blockchain.BlockChain, types.Address, *big.Int) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(bc), "SubBalance", func(*repository.Repository, types.Address, *big.Int) {
 		return
 	})
-	monkey.PatchInstanceMethod(reflect.TypeOf(bc), "GetNonce", func(*blockchain.BlockChain, types.Address) uint64 {
+	monkey.PatchInstanceMethod(reflect.TypeOf(bc), "GetNonce", func(*repository.Repository, types.Address) uint64 {
 		return 0
 	})
-	monkey.PatchInstanceMethod(reflect.TypeOf(bc), "SetNonce", func(b *blockchain.BlockChain, a types.Address, n uint64) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(bc), "SetNonce", func(b *repository.Repository, a types.Address, n uint64) {
 		assert.Equal(t, uint64(1), n)
 		return
 	})
@@ -142,7 +142,7 @@ func TestStateTransition_TransitionDb1(t *testing.T) {
 	state.nonce = 100
 	ret, used, ok, err, _ = state.TransitionDb()
 	assert.NotNil(t, err)
-	monkey.PatchInstanceMethod(reflect.TypeOf(bc), "GetNonce", func(*blockchain.BlockChain, types.Address) uint64 {
+	monkey.PatchInstanceMethod(reflect.TypeOf(bc), "GetNonce", func(*repository.Repository, types.Address) uint64 {
 		return 3
 	})
 	ret, used, ok, err, _ = state.TransitionDb()

@@ -2,9 +2,9 @@ package validator
 
 import (
 	"fmt"
-	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/monkey"
+	"github.com/DSiSc/repository"
 	account2 "github.com/DSiSc/validator/tools/account"
 	"github.com/DSiSc/validator/tools/signature"
 	"github.com/DSiSc/validator/worker"
@@ -43,15 +43,15 @@ func TestNewValidator(t *testing.T) {
 
 func TestValidateBlock(t *testing.T) {
 	assert := assert.New(t)
-	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+	monkey.Patch(repository.NewLatestStateRepository, func() (*repository.Repository, error) {
 		return nil, fmt.Errorf("mock error")
 	})
 	header, err := validator.ValidateBlock(mockBlock, false)
 	assert.Nil(header)
 	assert.NotNil(err)
-	assert.Equal(err, fmt.Errorf("get NewLatestStateBlockChain error:mock error "))
+	assert.Equal(err, fmt.Errorf("get NewLatestStateRepository error:mock error "))
 
-	monkey.Patch(blockchain.NewLatestStateBlockChain, func() (*blockchain.BlockChain, error) {
+	monkey.Patch(repository.NewLatestStateRepository, func() (*repository.Repository, error) {
 		return nil, nil
 	})
 	var woker *worker.Worker

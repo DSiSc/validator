@@ -3,9 +3,9 @@ package validator
 import (
 	"bytes"
 	"fmt"
-	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/log"
 	"github.com/DSiSc/craft/types"
+	"github.com/DSiSc/repository"
 	"github.com/DSiSc/validator/tools/account"
 	"github.com/DSiSc/validator/tools/signature"
 	"github.com/DSiSc/validator/worker"
@@ -23,9 +23,9 @@ func NewValidator(account *account.Account) *Validator {
 }
 
 func (self *Validator) ValidateBlock(block *types.Block, signVerify bool) (*types.Header, error) {
-	chain, err := blockchain.NewLatestStateBlockChain()
+	chain, err := repository.NewLatestStateRepository()
 	if err != nil {
-		return nil, fmt.Errorf("get NewLatestStateBlockChain error:%s ", err)
+		return nil, fmt.Errorf("get NewLatestStateRepository error:%s ", err)
 	}
 	// new worker to verify the block
 	work := worker.NewWorker(chain, block, signVerify)

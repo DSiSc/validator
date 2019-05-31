@@ -3,10 +3,10 @@ package worker
 import (
 	"bytes"
 	"fmt"
-	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/log"
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/evm-NG"
+	"github.com/DSiSc/repository"
 	vcommon "github.com/DSiSc/validator/common"
 	"github.com/DSiSc/validator/tools/merkle_tree"
 	"github.com/DSiSc/validator/worker/common"
@@ -16,13 +16,13 @@ import (
 
 type Worker struct {
 	block     *types.Block
-	chain     *blockchain.BlockChain
+	chain     *repository.Repository
 	receipts  types.Receipts
 	logs      []*types.Log
 	signature bool
 }
 
-func NewWorker(chain *blockchain.BlockChain, block *types.Block, signVerify bool) *Worker {
+func NewWorker(chain *repository.Repository, block *types.Block, signVerify bool) *Worker {
 	return &Worker{
 		block:     block,
 		chain:     chain,

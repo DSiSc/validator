@@ -2,10 +2,10 @@ package worker
 
 import (
 	"errors"
-	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/log"
 	"github.com/DSiSc/craft/types"
 	evmNg "github.com/DSiSc/evm-NG"
+	"github.com/DSiSc/repository"
 	vcommon "github.com/DSiSc/validator/common"
 	"github.com/DSiSc/validator/worker/common"
 	"math"
@@ -20,7 +20,7 @@ type StateTransition struct {
 	initialGas uint64
 	value      *big.Int
 	data       []byte
-	state      *blockchain.BlockChain
+	state      *repository.Repository
 	evm        *evmNg.EVM
 	from       types.Address
 	to         types.Address
