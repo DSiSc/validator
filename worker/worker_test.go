@@ -62,6 +62,13 @@ var mockHash1 = types.Hash{
 
 func TestWorker_VerifyTrsSignature(t *testing.T) {
 	key, _ := wallett.DefaultTestKey()
+	mockBlock := &types.Block{
+		Header: &types.Header{
+			ChainID: uint64(1),
+			Height:  uint64(1),
+		},
+	}
+
 	mockTrx := &types.Transaction{
 		Data: types.TxData{
 			AccountNonce: uint64(0),
@@ -72,8 +79,8 @@ func TestWorker_VerifyTrsSignature(t *testing.T) {
 			Payload:      addressB[:10],
 		},
 	}
-	mockTransaction, _ := wallett.SignTx(mockTrx, new(wallett.FrontierSigner), key)
-	worker := NewWorker(nil, nil, false)
+	mockTransaction, _ := wallett.SignTx(mockTrx, wallett.NewEIP155Signer(big.NewInt(1)), key)
+	worker := NewWorker(nil, mockBlock, false)
 	ok := worker.VerifyTrsSignature(mockTransaction)
 	assert.Equal(t, true, ok)
 
