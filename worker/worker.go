@@ -157,7 +157,7 @@ func (self *Worker) VerifyTransaction(author types.Address, gp *common.GasPool, 
 }
 
 func (self *Worker) VerifyTrsSignature(tx *types.Transaction) bool {
-	id := 5777
+	id := self.block.Header.ChainID
 	chainId := int64(id)
 	signer := wallett.NewEIP155Signer(big.NewInt(chainId))
 	//signer := new(wallett.FrontierSigner)
