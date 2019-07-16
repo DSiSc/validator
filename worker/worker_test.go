@@ -185,7 +185,7 @@ func TestWorker_VerifyTransaction(t *testing.T) {
 			GasLimit: uint64(65536),
 		}
 	})
-	monkey.Patch(ApplyTransaction, func(*evm.EVM, *types.Transaction, *workerc.GasPool) ([]byte, uint64, bool, error, types.Address) {
+	monkey.Patch(ApplyTransaction, func(author types.Address, header *types.Header, chain *repository.Repository, tx *types.Transaction, gp *workerc.GasPool) ([]byte, uint64, bool, error, types.Address) {
 		return addressA[:10], uint64(0), false, fmt.Errorf("Apply failed."), types.Address{}
 	})
 	mockTrx := &types.Transaction{

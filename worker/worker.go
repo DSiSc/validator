@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/DSiSc/craft/log"
 	"github.com/DSiSc/craft/types"
-	"github.com/DSiSc/evm-NG"
 	"github.com/DSiSc/repository"
 	vcommon "github.com/DSiSc/validator/common"
 	"github.com/DSiSc/validator/tools/merkle_tree"
@@ -128,9 +127,7 @@ func (self *Worker) VerifyTransaction(author types.Address, gp *common.GasPool, 
 			return nil, 0, fmt.Errorf("transaction signature failed")
 		}
 	}
-	context := evm.NewEVMContext(*tx, header, self.chain, author)
-	evmEnv := evm.NewEVM(context, self.chain)
-	_, gas, failed, err, contractAddress := ApplyTransaction(evmEnv, tx, gp)
+	_, gas, failed, err, contractAddress := ApplyTransaction(author, header, self.chain, tx, gp)
 	if err != nil {
 		log.Error("Apply transaction %x failed with error %v.", vcommon.TxHash(tx), err)
 		return nil, 0, err
