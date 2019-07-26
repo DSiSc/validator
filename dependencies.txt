@@ -11,3 +11,5 @@ github.com/DSiSc/txpool:master
 github.com/DSiSc/wallet:master
 github.com/DSiSc/monkey:master
 github.com/DSiSc/crypto-suite:master
+github.com/DSiSc/wasm:master
+
